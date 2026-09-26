@@ -1,0 +1,5329 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+
+    <meta name="viewport"
+          content="width=device-width, initial-scale=1.0">
+
+    <title>The Tell-Tale Heart — Interactive Horror</title>
+
+    <style>
+        /* =========================================================
+           THE TELL-TALE HEART
+           Interactive Horror Website
+           ========================================================= */
+
+        :root {
+            --background: #050505;
+            --panel: rgba(5, 5, 5, 0.92);
+            --panel-light: rgba(20, 20, 20, 0.92);
+
+            --white: #eeeeee;
+            --gray: #9b9b9b;
+
+            /* Character colors */
+            --narrator: #6fa8ff;
+            --old-man: #d45b5b;
+
+            /* Other text colors */
+            --thought: #b78cff;
+            --poe: #c8c8c8;
+            --choice: #d6a85f;
+
+            --danger: #9b111e;
+            --blood: #6d0000;
+
+            --transition-speed: 700ms;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        html,
+        body {
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+            background: var(--background);
+            color: var(--white);
+            font-family:
+                Georgia,
+                "Times New Roman",
+                serif;
+        }
+
+        button {
+            font-family: inherit;
+        }
+
+        /* =========================================================
+           GAME ROOT
+           ========================================================= */
+
+        #game {
+            position: relative;
+
+            width: 100vw;
+            height: 100vh;
+
+            overflow: hidden;
+
+            background:
+                radial-gradient(
+                    ellipse at center,
+                    #171717 0%,
+                    #080808 50%,
+                    #000000 100%
+                );
+        }
+
+        /* =========================================================
+           BACKGROUND / ART
+           ========================================================= */
+
+        #scene-container {
+            position: absolute;
+
+            inset: 0;
+
+            overflow: hidden;
+
+            background: #050505;
+
+            transition:
+                opacity var(--transition-speed) ease,
+                filter var(--transition-speed) ease,
+                transform var(--transition-speed) ease;
+        }
+
+        #scene-image {
+            position: absolute;
+
+            inset: 0;
+
+            width: 100%;
+            height: 100%;
+
+            object-fit: cover;
+
+            opacity: 0;
+
+            transition:
+                opacity 700ms ease,
+                transform 1000ms ease,
+                filter 700ms ease;
+        }
+
+        /*
+         * Placeholder artwork.
+         *
+         * Later:
+         *
+         * /frames/frame01.jpg
+         * /frames/frame02.jpg
+         * ...
+         *
+         * will replace this system.
+         */
+
+        #placeholder-scene {
+            position: absolute;
+
+            inset: 0;
+
+            display: flex;
+
+            align-items: center;
+            justify-content: center;
+
+            text-align: center;
+
+            background:
+                radial-gradient(
+                    circle at 50% 45%,
+                    rgba(90, 90, 90, 0.12),
+                    transparent 25%
+                ),
+                linear-gradient(
+                    180deg,
+                    #171717,
+                    #050505 70%,
+                    #000
+                );
+
+            transition:
+                background 900ms ease,
+                filter 900ms ease;
+        }
+
+        #placeholder-scene::before {
+            content: "";
+
+            position: absolute;
+
+            width: 45%;
+            height: 45%;
+
+            bottom: 18%;
+            left: 27.5%;
+
+            background:
+                linear-gradient(
+                    90deg,
+                    transparent 0 8%,
+                    #111 8% 92%,
+                    transparent 92%
+                );
+
+            clip-path: polygon(
+                50% 0%,
+                100% 25%,
+                100% 100%,
+                0% 100%,
+                0% 25%
+            );
+
+            opacity: 0.8;
+
+            filter: blur(1px);
+        }
+
+        #placeholder-scene::after {
+            content: "";
+
+            position: absolute;
+
+            width: 7%;
+            height: 18%;
+
+            bottom: 18%;
+            left: 46.5%;
+
+            background: #050505;
+
+            box-shadow:
+                0 0 30px rgba(0,0,0,0.9);
+
+            opacity: 0.9;
+        }
+
+        #placeholder-label {
+            position: relative;
+
+            z-index: 2;
+
+            max-width: 600px;
+
+            padding: 30px;
+
+            color: rgba(255,255,255,0.5);
+
+            font-size: 18px;
+
+            letter-spacing: 2px;
+
+            text-transform: uppercase;
+
+            text-shadow:
+                0 0 20px rgba(255,255,255,0.1);
+        }
+
+        /* =========================================================
+           ATMOSPHERE
+           ========================================================= */
+
+        #vignette {
+            position: absolute;
+
+            inset: 0;
+
+            pointer-events: none;
+
+            z-index: 5;
+
+            background:
+                radial-gradient(
+                    ellipse at center,
+                    transparent 35%,
+                    rgba(0,0,0,0.35) 65%,
+                    rgba(0,0,0,0.9) 100%
+                );
+        }
+
+        #grain {
+            position: absolute;
+
+            inset: 0;
+
+            z-index: 6;
+
+            pointer-events: none;
+
+            opacity: 0.07;
+
+            background-image:
+                url("data:image/svg+xml,%3Csvg viewBox='0 0 180 180' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='.8'/%3E%3C/svg%3E");
+
+            animation:
+                grainMovement 0.15s infinite;
+        }
+
+        @keyframes grainMovement {
+            0% {
+                transform: translate(0,0);
+            }
+
+            25% {
+                transform: translate(-2%,2%);
+            }
+
+            50% {
+                transform: translate(2%,-1%);
+            }
+
+            75% {
+                transform: translate(-1%,-2%);
+            }
+
+            100% {
+                transform: translate(0,0);
+            }
+        }
+
+        /* =========================================================
+           RED NIGHT
+           ========================================================= */
+
+        #red-overlay {
+            position: absolute;
+
+            inset: 0;
+
+            z-index: 7;
+
+            pointer-events: none;
+
+            opacity: 0;
+
+            background:
+                radial-gradient(
+                    circle at center,
+                    rgba(100,0,0,0.05),
+                    rgba(80,0,0,0.45)
+                );
+
+            transition:
+                opacity 1000ms ease;
+        }
+
+        #game.red-night #red-overlay {
+            opacity: 1;
+        }
+
+        /* =========================================================
+           HEARTBEAT
+           ========================================================= */
+
+        #heartbeat-flash {
+            position: absolute;
+
+            inset: 0;
+
+            z-index: 8;
+
+            pointer-events: none;
+
+            background:
+                rgba(130,0,0,0.18);
+
+            opacity: 0;
+        }
+
+        #heartbeat-flash.beat {
+            animation: heartbeatFlash 0.32s ease;
+        }
+
+        @keyframes heartbeatFlash {
+
+            0% {
+                opacity: 0;
+            }
+
+            35% {
+                opacity: 0.6;
+            }
+
+            100% {
+                opacity: 0;
+            }
+        }
+
+        #heartbeat-text {
+            position: absolute;
+
+            top: 8%;
+
+            left: 50%;
+
+            transform: translateX(-50%);
+
+            z-index: 20;
+
+            pointer-events: none;
+
+            font-size: 14px;
+
+            letter-spacing: 5px;
+
+            color: rgba(255,255,255,0.35);
+
+            opacity: 0;
+
+            transition:
+                opacity 300ms ease;
+        }
+
+        #heartbeat-text.visible {
+            opacity: 1;
+        }
+
+        /* =========================================================
+           TOP UI
+           ========================================================= */
+
+        #top-ui {
+            position: absolute;
+
+            top: 20px;
+            left: 20px;
+            right: 20px;
+
+            z-index: 30;
+
+            display: flex;
+
+            justify-content: space-between;
+
+            align-items: center;
+
+            pointer-events: none;
+        }
+
+        #chapter-label {
+            font-size: 12px;
+
+            letter-spacing: 3px;
+
+            text-transform: uppercase;
+
+            color: rgba(255,255,255,0.45);
+
+            text-shadow:
+                0 0 10px #000;
+        }
+
+        #controls {
+            display: flex;
+
+            gap: 8px;
+
+            pointer-events: auto;
+        }
+
+        .small-button {
+            padding: 7px 12px;
+
+            border: 1px solid rgba(255,255,255,0.15);
+
+            background:
+                rgba(0,0,0,0.5);
+
+            color:
+                rgba(255,255,255,0.65);
+
+            cursor: pointer;
+
+            font-size: 11px;
+
+            letter-spacing: 1px;
+
+            transition:
+                background 200ms ease,
+                color 200ms ease,
+                border-color 200ms ease;
+        }
+
+        .small-button:hover {
+            background:
+                rgba(255,255,255,0.1);
+
+            color: white;
+
+            border-color:
+                rgba(255,255,255,0.4);
+        }
+
+        /* =========================================================
+           DIALOGUE SYSTEM
+           ========================================================= */
+
+        #dialogue-wrapper {
+            position: absolute;
+
+            left: 0;
+            right: 0;
+            bottom: 0;
+
+            z-index: 25;
+
+            padding:
+                0
+                clamp(15px, 4vw, 70px)
+                clamp(15px, 4vw, 50px);
+
+            opacity: 0;
+
+            visibility: hidden;
+
+            pointer-events: none;
+
+            transition:
+                opacity 500ms ease,
+                visibility 500ms ease;
+        }
+
+        #dialogue-wrapper.visible {
+            opacity: 1;
+
+            visibility: visible;
+
+            pointer-events: auto;
+        }
+
+        #dialogue-box {
+            position: relative;
+
+            max-width: 1200px;
+
+            margin:
+                0 auto;
+
+            padding:
+                25px
+                30px
+                24px;
+
+            min-height: 155px;
+
+            background:
+                linear-gradient(
+                    180deg,
+                    rgba(7,7,7,0.82),
+                    rgba(2,2,2,0.97)
+                );
+
+            border:
+                1px solid rgba(255,255,255,0.12);
+
+            border-left:
+                3px solid rgba(255,255,255,0.15);
+
+            box-shadow:
+                0 -15px 60px rgba(0,0,0,0.65);
+
+            backdrop-filter:
+                blur(8px);
+
+            transition:
+                border-color 300ms ease;
+        }
+
+        #speaker {
+            display: inline-block;
+
+            margin-bottom: 10px;
+
+            font-size: 13px;
+
+            font-weight: bold;
+
+            letter-spacing: 3px;
+
+            text-transform: uppercase;
+        }
+
+        #speaker.narrator {
+            color: var(--narrator);
+        }
+
+        #speaker.old-man {
+            color: var(--old-man);
+        }
+
+        #speaker.poe {
+            color: var(--poe);
+        }
+
+        #speaker.thought {
+            color: var(--thought);
+        }
+
+        #speaker.system {
+            color: var(--choice);
+        }
+
+        #dialogue-text {
+            min-height: 55px;
+
+            color: #eeeeee;
+
+            font-size:
+                clamp(16px, 2vw, 20px);
+
+            line-height: 1.7;
+
+            white-space: pre-wrap;
+        }
+
+        #dialogue-text.thought {
+            color: var(--thought);
+
+            font-style: italic;
+        }
+
+        #dialogue-text.poe {
+            color: var(--poe);
+
+            font-style: italic;
+        }
+
+        #continue-hint {
+            position: absolute;
+
+            right: 20px;
+            bottom: 13px;
+
+            color:
+                rgba(255,255,255,0.35);
+
+            font-size: 10px;
+
+            letter-spacing: 2px;
+
+            text-transform: uppercase;
+
+            opacity: 0;
+
+            transition:
+                opacity 300ms ease;
+        }
+
+        #continue-hint.visible {
+            opacity: 1;
+        }
+
+        /* =========================================================
+           CHOICES
+           ========================================================= */
+
+        #choices {
+            position: absolute;
+
+            left: 50%;
+            bottom: 180px;
+
+            transform:
+                translateX(-50%);
+
+            z-index: 35;
+
+            display: flex;
+
+            flex-wrap: wrap;
+
+            justify-content: center;
+
+            gap: 12px;
+
+            width:
+                min(900px, 90vw);
+
+            opacity: 0;
+
+            pointer-events: none;
+
+            transition:
+                opacity 400ms ease,
+                transform 400ms ease;
+        }
+
+        #choices.visible {
+            opacity: 1;
+
+            pointer-events: auto;
+
+            transform:
+                translateX(-50%)
+                translateY(-5px);
+        }
+
+        .choice-button {
+            min-width: 180px;
+
+            padding: 15px 28px;
+
+            border:
+                1px solid
+                rgba(214,168,95,0.45);
+
+            background:
+                rgba(0,0,0,0.82);
+
+            color:
+                var(--choice);
+
+            cursor: pointer;
+
+            font-size: 13px;
+
+            font-weight: bold;
+
+            letter-spacing: 2px;
+
+            text-transform: uppercase;
+
+            transition:
+                background 250ms ease,
+                border-color 250ms ease,
+                transform 250ms ease,
+                color 250ms ease;
+        }
+
+        .choice-button:hover {
+            background:
+                rgba(214,168,95,0.12);
+
+            border-color:
+                var(--choice);
+
+            color:
+                #fff;
+
+            transform:
+                translateY(-3px);
+        }
+
+        /* =========================================================
+           MAIN MENU
+           ========================================================= */
+
+        #main-menu {
+            position: absolute;
+
+            inset: 0;
+
+            z-index: 100;
+
+            display: flex;
+
+            align-items: center;
+
+            justify-content: flex-start;
+
+            padding-left:
+                clamp(30px, 10vw, 160px);
+
+            background:
+                radial-gradient(
+                    ellipse at 70% 50%,
+                    rgba(40,40,40,0.25),
+                    transparent 45%
+                ),
+                linear-gradient(
+                    90deg,
+                    rgba(0,0,0,0.95),
+                    rgba(0,0,0,0.45),
+                    rgba(0,0,0,0.2)
+                );
+
+            transition:
+                opacity 1000ms ease,
+                visibility 1000ms ease;
+        }
+
+        #main-menu.hidden {
+            opacity: 0;
+
+            visibility: hidden;
+
+            pointer-events: none;
+        }
+
+        .menu-content {
+            width:
+                min(480px, 80vw);
+        }
+
+        .menu-eyebrow {
+            color:
+                rgba(255,255,255,0.5);
+
+            font-size: 11px;
+
+            letter-spacing: 5px;
+
+            text-transform: uppercase;
+
+            margin-bottom: 20px;
+        }
+
+        .menu-title {
+            font-size:
+                clamp(48px, 8vw, 92px);
+
+            line-height: 0.9;
+
+            font-weight: normal;
+
+            letter-spacing: -3px;
+
+            text-shadow:
+                0 5px 30px rgba(0,0,0,0.9);
+        }
+
+        .menu-subtitle {
+            margin-top: 20px;
+
+            max-width: 390px;
+
+            color:
+                rgba(255,255,255,0.55);
+
+            line-height: 1.7;
+
+            font-size: 14px;
+        }
+
+        #start-button {
+            margin-top: 40px;
+
+            padding:
+                16px 42px;
+
+            background:
+                transparent;
+
+            color:
+                white;
+
+            border:
+                1px solid
+                rgba(255,255,255,0.4);
+
+            cursor: pointer;
+
+            font-size: 12px;
+
+            font-weight: bold;
+
+            letter-spacing: 4px;
+
+            transition:
+                background 300ms ease,
+                border-color 300ms ease,
+                transform 300ms ease;
+        }
+
+        #start-button:hover {
+            background:
+                rgba(255,255,255,0.1);
+
+            border-color:
+                white;
+
+            transform:
+                translateX(5px);
+        }
+
+        .menu-warning {
+            margin-top: 35px;
+
+            color:
+                rgba(255,255,255,0.25);
+
+            font-size: 10px;
+
+            letter-spacing: 1px;
+
+            line-height: 1.6;
+        }
+
+        /* =========================================================
+           CENTER SYSTEM MESSAGE
+           ========================================================= */
+
+        #center-message {
+            position: absolute;
+
+            inset: 0;
+
+            z-index: 90;
+
+            display: flex;
+
+            align-items: center;
+            justify-content: center;
+
+            text-align: center;
+
+            pointer-events: none;
+
+            opacity: 0;
+
+            transition:
+                opacity 700ms ease;
+        }
+
+        #center-message.visible {
+            opacity: 1;
+        }
+
+        #center-message-content {
+            max-width: 800px;
+
+            padding: 30px;
+
+            text-shadow:
+                0 0 30px black;
+        }
+
+        #center-message-title {
+            font-size:
+                clamp(30px, 6vw, 70px);
+
+            letter-spacing: 4px;
+
+            text-transform: uppercase;
+        }
+
+        #center-message-subtitle {
+            margin-top: 15px;
+
+            color:
+                rgba(255,255,255,0.65);
+
+            font-size: 14px;
+
+            letter-spacing: 3px;
+        }
+
+        /* =========================================================
+           MIDNIGHT CLOCK (black screen transition)
+           ========================================================= */
+
+        #black-screen {
+            position: absolute;
+
+            inset: 0;
+
+            z-index: 95;
+
+            background: #000;
+
+            display: flex;
+
+            align-items: center;
+            justify-content: center;
+
+            opacity: 0;
+
+            visibility: hidden;
+
+            pointer-events: none;
+
+            transition:
+                opacity 600ms ease,
+                visibility 600ms ease;
+        }
+
+        #black-screen.visible {
+            opacity: 1;
+
+            visibility: visible;
+
+            pointer-events: auto;
+        }
+
+        #black-screen-time {
+            color:
+                rgba(255,255,255,0.8);
+
+            font-size:
+                clamp(24px, 5vw, 48px);
+
+            letter-spacing: 6px;
+
+            font-variant-numeric:
+                tabular-nums;
+        }
+
+        /* =========================================================
+           JUMPSCARE
+           ========================================================= */
+
+        #jumpscare {
+            position: fixed;
+
+            inset: 0;
+
+            z-index: 999;
+
+            display: flex;
+
+            align-items: center;
+            justify-content: center;
+
+            background:
+                #000;
+
+            opacity: 0;
+
+            visibility: hidden;
+
+            pointer-events: none;
+        }
+
+        #jumpscare.active {
+            opacity: 1;
+
+            visibility: visible;
+
+            animation:
+                jumpscareAnimation 1.1s ease;
+        }
+
+        #jumpscare-face {
+            width: 100%;
+            height: 100%;
+
+            display: flex;
+
+            align-items: center;
+            justify-content: center;
+
+            color:
+                #eee;
+
+            font-size:
+                clamp(60px, 15vw, 200px);
+
+            font-weight: bold;
+
+            text-shadow:
+                0 0 40px #900;
+        }
+
+        @keyframes jumpscareAnimation {
+
+            0% {
+                opacity: 0;
+                transform: scale(1);
+            }
+
+            12% {
+                opacity: 1;
+                transform: scale(1.4);
+            }
+
+            18% {
+                transform: scale(0.9);
+            }
+
+            25% {
+                transform: scale(1.15);
+            }
+
+            40% {
+                transform: scale(1);
+            }
+
+            100% {
+                opacity: 1;
+            }
+        }
+
+        /* =========================================================
+           ENDING
+           ========================================================= */
+
+        #ending-screen {
+            position: fixed;
+
+            inset: 0;
+
+            z-index: 200;
+
+            display: flex;
+
+            flex-direction: column;
+
+            align-items: center;
+            justify-content: center;
+
+            text-align: center;
+
+            background:
+                #000;
+
+            opacity: 0;
+
+            visibility: hidden;
+
+            pointer-events: none;
+
+            transition:
+                opacity 1000ms ease;
+        }
+
+        #ending-screen.visible {
+            opacity: 1;
+
+            visibility: visible;
+
+            pointer-events: auto;
+        }
+
+        #ending-title {
+            font-size:
+                clamp(36px, 7vw, 80px);
+
+            letter-spacing: 8px;
+
+            font-weight: normal;
+        }
+
+        #ending-type {
+            margin-top: 25px;
+
+            font-size: 14px;
+
+            letter-spacing: 5px;
+
+            text-transform: uppercase;
+        }
+
+        #ending-description {
+            max-width: 600px;
+
+            margin-top: 25px;
+
+            color:
+                rgba(255,255,255,0.55);
+
+            line-height: 1.8;
+        }
+
+        #restart-button {
+            margin-top: 45px;
+
+            padding:
+                14px 32px;
+
+            border:
+                1px solid rgba(255,255,255,0.3);
+
+            background:
+                transparent;
+
+            color:
+                white;
+
+            cursor: pointer;
+
+            letter-spacing: 3px;
+
+            text-transform: uppercase;
+        }
+
+        #restart-button:hover {
+            background:
+                rgba(255,255,255,0.1);
+        }
+
+        /* =========================================================
+           SCREEN EFFECTS
+           ========================================================= */
+
+        .shake {
+            animation:
+                screenShake 350ms ease;
+        }
+
+        @keyframes screenShake {
+
+            0% {
+                transform: translate(0,0);
+            }
+
+            15% {
+                transform: translate(-8px,5px);
+            }
+
+            30% {
+                transform: translate(7px,-6px);
+            }
+
+            45% {
+                transform: translate(-6px,-4px);
+            }
+
+            60% {
+                transform: translate(5px,5px);
+            }
+
+            75% {
+                transform: translate(-3px,-3px);
+            }
+
+            100% {
+                transform: translate(0,0);
+            }
+        }
+
+        .fade-in {
+            animation:
+                fadeIn 900ms ease forwards;
+        }
+
+        @keyframes fadeIn {
+
+            from {
+                opacity: 0;
+            }
+
+            to {
+                opacity: 1;
+            }
+        }
+
+        .slow-zoom {
+            animation:
+                slowZoom 8s ease-in-out infinite alternate;
+        }
+
+        @keyframes slowZoom {
+
+            from {
+                transform: scale(1);
+            }
+
+            to {
+                transform: scale(1.06);
+            }
+        }
+
+        /* =========================================================
+           RESPONSIVE
+           ========================================================= */
+
+        @media (max-width: 700px) {
+
+            #dialogue-box {
+                min-height: 175px;
+
+                padding:
+                    20px;
+            }
+
+            #choices {
+                bottom: 200px;
+
+                flex-direction: column;
+
+                align-items: center;
+            }
+
+            .choice-button {
+                width:
+                    min(85vw, 350px);
+            }
+
+            #dialogue-text {
+                font-size: 15px;
+            }
+
+            #continue-hint {
+                display: none;
+            }
+
+            #main-menu {
+                padding-left: 30px;
+
+                align-items:
+                    flex-end;
+
+                padding-bottom: 110px;
+            }
+        }
+
+    </style>
+</head>
+
+<body>
+
+<div id="game">
+
+    <!-- =========================================================
+         SCENE
+         ========================================================= -->
+
+    <div id="scene-container">
+
+        <div id="placeholder-scene">
+
+            <div id="placeholder-label">
+                FRAME 01<br>
+                <small>
+                    Placeholder artwork — your actual frames
+                    will be inserted here.
+                </small>
+            </div>
+
+        </div>
+
+        <img
+            id="scene-image"
+            alt="Current scene"
+        >
+
+    </div>
+
+
+    <!-- =========================================================
+         ATMOSPHERE
+         ========================================================= -->
+
+    <div id="vignette"></div>
+
+    <div id="grain"></div>
+
+    <div id="red-overlay"></div>
+
+    <div id="heartbeat-flash"></div>
+
+    <div id="heartbeat-text">
+        THUMP
+    </div>
+
+
+    <!-- =========================================================
+         TOP UI
+         ========================================================= -->
+
+    <div id="top-ui">
+
+        <div id="chapter-label">
+            THE TELL-TALE HEART
+        </div>
+
+        <div id="controls">
+
+            <button
+                class="small-button"
+                id="skip-button"
+            >
+                SKIP TEXT
+            </button>
+
+            <button
+                class="small-button"
+                id="save-button"
+            >
+                SAVE
+            </button>
+
+        </div>
+
+    </div>
+
+
+    <!-- =========================================================
+         DIALOGUE
+         ========================================================= -->
+
+    <div id="dialogue-wrapper">
+
+        <div id="dialogue-box">
+
+            <div id="speaker">
+                NARRATOR
+            </div>
+
+            <div id="dialogue-text">
+            </div>
+
+            <div id="continue-hint">
+                CLICK TO CONTINUE
+            </div>
+
+        </div>
+
+    </div>
+
+
+    <!-- =========================================================
+         CHOICES
+         ========================================================= -->
+
+    <div id="choices"></div>
+
+
+    <!-- =========================================================
+         MAIN MENU
+         ========================================================= -->
+
+    <div id="main-menu">
+
+        <div class="menu-content">
+
+            <div class="menu-eyebrow">
+                An Interactive Horror Story
+            </div>
+
+            <div class="menu-title">
+                THE<br>
+                TELL-TALE<br>
+                HEART
+            </div>
+
+            <div class="menu-subtitle">
+
+                Based on the short story
+                by Edgar Allan Poe.
+
+                <br><br>
+
+                Every choice leaves a mark.
+
+            </div>
+
+            <button id="start-button">
+                BEGIN
+            </button>
+
+            <div class="menu-warning">
+
+                This experience contains horror,
+                psychological themes, and sudden
+                visual effects.
+
+            </div>
+
+        </div>
+
+    </div>
+
+
+    <!-- =========================================================
+         CENTER MESSAGE
+         ========================================================= -->
+
+    <div id="center-message">
+
+        <div id="center-message-content">
+
+            <div id="center-message-title"></div>
+
+            <div id="center-message-subtitle"></div>
+
+        </div>
+
+    </div>
+
+
+    <!-- =========================================================
+         MIDNIGHT CLOCK (black screen transition)
+         ========================================================= -->
+
+    <div id="black-screen">
+
+        <div id="black-screen-time"></div>
+
+    </div>
+
+
+    <!-- =========================================================
+         JUMPSCARE
+         ========================================================= -->
+
+    <div id="jumpscare">
+
+        <div id="jumpscare-face">
+            👁
+        </div>
+
+    </div>
+
+
+    <!-- =========================================================
+         ENDING SCREEN
+         ========================================================= -->
+
+    <div id="ending-screen">
+
+        <div id="ending-title">
+            THE END
+        </div>
+
+        <div id="ending-type">
+        </div>
+
+        <div id="ending-description">
+        </div>
+
+        <button id="restart-button">
+            PLAY AGAIN
+        </button>
+
+    </div>
+
+</div>
+
+
+<script>
+
+/* ================================================================
+   THE TELL-TALE HEART
+   GAME ENGINE
+   ================================================================
+
+   Everything is intentionally kept in this file for now.
+
+   Later we can split this into:
+
+       index.html
+       style.css
+       script.js
+
+   and put the artwork in:
+
+       /frames/
+
+   ================================================================ */
+
+
+/* ================================================================
+   DOM REFERENCES
+   ================================================================ */
+
+const game =
+    document.getElementById("game");
+
+const mainMenu =
+    document.getElementById("main-menu");
+
+const startButton =
+    document.getElementById("start-button");
+
+const sceneContainer =
+    document.getElementById("scene-container");
+
+const placeholderScene =
+    document.getElementById("placeholder-scene");
+
+const placeholderLabel =
+    document.getElementById("placeholder-label");
+
+const sceneImage =
+    document.getElementById("scene-image");
+
+const dialogueWrapper =
+    document.getElementById("dialogue-wrapper");
+
+const dialogueBox =
+    document.getElementById("dialogue-box");
+
+const speaker =
+    document.getElementById("speaker");
+
+const dialogueText =
+    document.getElementById("dialogue-text");
+
+const continueHint =
+    document.getElementById("continue-hint");
+
+const choicesContainer =
+    document.getElementById("choices");
+
+const chapterLabel =
+    document.getElementById("chapter-label");
+
+const heartbeatFlash =
+    document.getElementById("heartbeat-flash");
+
+const heartbeatText =
+    document.getElementById("heartbeat-text");
+
+const redOverlay =
+    document.getElementById("red-overlay");
+
+const centerMessage =
+    document.getElementById("center-message");
+
+const centerMessageTitle =
+    document.getElementById("center-message-title");
+
+const centerMessageSubtitle =
+    document.getElementById("center-message-subtitle");
+
+const blackScreen =
+    document.getElementById("black-screen");
+
+const blackScreenTime =
+    document.getElementById("black-screen-time");
+
+const jumpscare =
+    document.getElementById("jumpscare");
+
+const endingScreen =
+    document.getElementById("ending-screen");
+
+const endingType =
+    document.getElementById("ending-type");
+
+const endingDescription =
+    document.getElementById("ending-description");
+
+const restartButton =
+    document.getElementById("restart-button");
+
+const skipButton =
+    document.getElementById("skip-button");
+
+const saveButton =
+    document.getElementById("save-button");
+
+
+/* ================================================================
+   GAME STATE
+   ================================================================ */
+
+const defaultState = {
+
+    started: false,
+
+    currentScene:
+        "menu",
+
+    currentStep:
+        0,
+
+    night:
+        0,
+
+    /* Morning behavior */
+
+    kindness:
+        0,
+
+    meanCount:
+        0,
+
+    /* Important choices */
+
+    leftAtNight1:
+        false,
+
+    night3Choice:
+        null,
+
+    night5Choice:
+        null,
+
+    finalChoice:
+        null,
+
+    bodyLocation:
+        null,
+
+    /* Progress */
+
+    ending:
+        null,
+
+    completed:
+        false
+
+};
+
+
+let state = {
+    ...defaultState
+};
+
+
+/* ================================================================
+   TYPEWRITER
+   ================================================================ */
+
+let typing = false;
+
+let skipTyping = false;
+
+let typingTimer = null;
+
+let currentFullText = "";
+
+
+/* ================================================================
+   AUDIO PLACEHOLDERS
+   ================================================================
+
+   These don't require any files yet.
+
+   Later:
+
+       audio.heartbeat =
+           new Audio("audio/heartbeat.mp3");
+
+   ================================================================ */
+
+const audio = {
+
+    heartbeat: null,
+
+    ambience: null,
+
+    footsteps: null,
+
+    door: null,
+
+    knock: null,
+
+    jumpscare: null,
+
+    nightFiveStalk: null
+
+};
+
+
+/* ================================================================
+   AUDIO HELPERS
+
+   Safe play/stop for any key in the `audio` object above.
+   Nothing happens until you assign a real Audio() to that key,
+   e.g.  audio.nightFiveStalk = new Audio("audio/night5-stalk.mp3");
+   ================================================================ */
+
+function playAudio(
+    key,
+    { loop = false } = {}
+) {
+
+    const track =
+        audio[key];
+
+    if (!track)
+        return;
+
+    try {
+
+        track.loop =
+            loop;
+
+        track.currentTime =
+            0;
+
+        track.play();
+
+    }
+
+    catch (error) {}
+
+}
+
+
+function stopAudio(
+    key
+) {
+
+    const track =
+        audio[key];
+
+    if (!track)
+        return;
+
+    try {
+
+        track.pause();
+
+        track.currentTime =
+            0;
+
+    }
+
+    catch (error) {}
+
+}
+
+
+/* ================================================================
+   FUTURE FRAME SYSTEM
+   ================================================================
+
+   When your 51 images arrive, change this:
+
+       FRAME_IMAGES[1] = "frames/frame01.jpg";
+
+   etc.
+
+   The game already knows how to use them.
+   ================================================================ */
+
+const FRAME_IMAGES = {
+
+    /*
+    1:
+        "frames/frame01.jpg",
+
+    2:
+        "frames/frame02.jpg",
+
+    3:
+        "frames/frame03.jpg",
+
+    ...
+    */
+
+};
+
+
+/* ================================================================
+   FRAME DISPLAY
+   ================================================================ */
+
+function showFrame(
+    frameNumber,
+    label = ""
+) {
+
+    const image =
+        FRAME_IMAGES[frameNumber];
+
+    placeholderLabel.innerHTML =
+        `FRAME ${String(frameNumber).padStart(2, "0")}<br>
+         <small>
+            ${label || "Placeholder artwork"}
+         </small>`;
+
+    if (image) {
+
+        sceneImage.src =
+            image;
+
+        sceneImage.style.opacity =
+            "1";
+
+        placeholderScene.style.opacity =
+            "0";
+
+    } else {
+
+        sceneImage.style.opacity =
+            "0";
+
+        placeholderScene.style.opacity =
+            "1";
+
+    }
+
+    sceneContainer
+        .classList
+        .remove("fade-in");
+
+    void sceneContainer.offsetWidth;
+
+    sceneContainer
+        .classList
+        .add("fade-in");
+}
+
+
+/* ================================================================
+   CHAPTER
+   ================================================================ */
+
+function setChapter(text) {
+
+    chapterLabel.textContent =
+        text;
+
+}
+
+
+/* ================================================================
+   CLEAR CHOICES
+   ================================================================ */
+
+function clearChoices() {
+
+    choicesContainer.innerHTML =
+        "";
+
+    choicesContainer
+        .classList
+        .remove("visible");
+
+}
+
+
+/* ================================================================
+   SHOW CHOICES
+   ================================================================ */
+
+function showChoices(
+    choices
+) {
+
+    clearChoices();
+
+    choices.forEach(
+        choice => {
+
+            const button =
+                document.createElement("button");
+
+            button.className =
+                "choice-button";
+
+            button.textContent =
+                choice.text;
+
+            button.addEventListener(
+                "click",
+                () => {
+
+                    clearChoices();
+
+                    if (choice.action) {
+
+                        choice.action();
+
+                    }
+
+                }
+            );
+
+            choicesContainer
+                .appendChild(button);
+
+        }
+    );
+
+    requestAnimationFrame(
+        () => {
+
+            choicesContainer
+                .classList
+                .add("visible");
+
+        }
+    );
+
+}
+
+
+/* ================================================================
+   TYPEWRITER
+   ================================================================ */
+
+function typeText(
+    text,
+    type = "normal",
+    callback = null
+) {
+
+    clearTimeout(typingTimer);
+
+    typing = true;
+
+    skipTyping = false;
+
+    currentFullText =
+        text;
+
+    dialogueText.className =
+        "";
+
+    speaker.className =
+        "";
+
+    if (type === "narrator") {
+
+        speaker.textContent =
+            "NARRATOR";
+
+        speaker.classList
+            .add("narrator");
+
+    }
+
+    else if (type === "old-man") {
+
+        speaker.textContent =
+            "OLD MAN";
+
+        speaker.classList
+            .add("old-man");
+
+    }
+
+    else if (type === "poe") {
+
+        speaker.textContent =
+            "EDGAR ALLAN POE";
+
+        speaker.classList
+            .add("poe");
+
+        dialogueText.classList
+            .add("poe");
+
+    }
+
+    else if (type === "thought") {
+
+        speaker.textContent =
+            "THOUGHT";
+
+        speaker.classList
+            .add("thought");
+
+        dialogueText.classList
+            .add("thought");
+
+    }
+
+    else if (type === "system") {
+
+        speaker.textContent =
+            "";
+
+        speaker.classList
+            .add("system");
+
+    }
+
+    else {
+
+        speaker.textContent =
+            "";
+
+    }
+
+
+    dialogueText.textContent =
+        "";
+
+    continueHint
+        .classList
+        .remove("visible");
+
+
+    if (skipTyping) {
+
+        dialogueText.textContent =
+            text;
+
+        typing =
+            false;
+
+        if (callback)
+            continueAction(callback);
+
+        return;
+
+    }
+
+
+    let index =
+        0;
+
+
+    const speed =
+        type === "poe"
+            ? 18
+            : type === "thought"
+                ? 30
+                : 24;
+
+
+    function write() {
+
+        if (skipTyping) {
+
+            dialogueText.textContent =
+                text;
+
+            typing =
+                false;
+
+            continueHint
+                .classList
+                .add("visible");
+
+            if (callback)
+                continueAction(callback);
+
+            return;
+
+        }
+
+
+        if (index < text.length) {
+
+            dialogueText.textContent +=
+                text[index];
+
+            index++;
+
+            typingTimer =
+                setTimeout(
+                    write,
+                    speed
+                );
+
+        }
+
+        else {
+
+            typing =
+                false;
+
+            continueHint
+                .classList
+                .add("visible");
+
+            if (callback)
+                continueAction(callback);
+
+        }
+
+    }
+
+
+    write();
+
+}
+
+
+/* ================================================================
+   DIALOGUE HELPER
+   ================================================================ */
+
+function say(
+    text,
+    type = "narrator",
+    callback = null
+) {
+
+    clearChoices();
+
+    typeText(
+        text,
+        type,
+        callback
+    );
+
+}
+
+
+/* ================================================================
+   POE QUOTE
+   ================================================================ */
+
+function poe(
+    text,
+    callback = null
+) {
+
+    say(
+        text,
+        "poe",
+        callback
+    );
+
+}
+
+
+/* ================================================================
+   THOUGHT
+   ================================================================ */
+
+function thought(
+    text,
+    callback = null
+) {
+
+    say(
+        text,
+        "thought",
+        callback
+    );
+
+}
+
+
+/* ================================================================
+   WAIT
+   ================================================================ */
+
+function wait(
+    milliseconds
+) {
+
+    return new Promise(
+        resolve =>
+            setTimeout(
+                resolve,
+                milliseconds
+            )
+    );
+
+}
+
+
+/* ================================================================
+   CENTER MESSAGE
+   ================================================================ */
+
+async function centerText(
+    title,
+    subtitle = "",
+    duration = 1800
+) {
+
+    centerMessageTitle
+        .textContent =
+        title;
+
+    centerMessageSubtitle
+        .textContent =
+        subtitle;
+
+    centerMessage
+        .classList
+        .add("visible");
+
+    await wait(duration);
+
+    centerMessage
+        .classList
+        .remove("visible");
+
+}
+
+
+/* ================================================================
+   MIDNIGHT CLOCK TRANSITION
+
+   Black screen, ticking from 11:58 PM to 12:00 AM, then the
+   dialogue box fades back in. Await this before starting whatever
+   scene begins at midnight.
+   ================================================================ */
+
+async function midnightTransition() {
+
+    clearChoices();
+
+    dialogueWrapper
+        .classList
+        .remove("visible");
+
+    blackScreen
+        .classList
+        .add("visible");
+
+    await wait(600);
+
+    blackScreenTime.textContent =
+        "11:58 PM";
+
+    await wait(900);
+
+    blackScreenTime.textContent =
+        "11:59 PM";
+
+    await wait(900);
+
+    blackScreenTime.textContent =
+        "12:00 AM";
+
+    await wait(1300);
+
+    blackScreen
+        .classList
+        .remove("visible");
+
+    await wait(400);
+
+    dialogueWrapper
+        .classList
+        .add("visible");
+
+}
+
+
+/* ================================================================
+   HEARTBEAT
+   ================================================================ */
+
+function heartbeat(
+    intensity = 1
+) {
+
+    heartbeatFlash
+        .classList
+        .remove("beat");
+
+    void heartbeatFlash.offsetWidth;
+
+    heartbeatFlash
+        .classList
+        .add("beat");
+
+    heartbeatText
+        .classList
+        .add("visible");
+
+    heartbeatText.style
+        .transform =
+        `translateX(-50%) scale(${1 + intensity * 0.15})`;
+
+    if (
+        audio.heartbeat &&
+        typeof audio.heartbeat.play ===
+        "function"
+    ) {
+
+        try {
+
+            audio.heartbeat.currentTime =
+                0;
+
+            audio.heartbeat.play();
+
+        }
+
+        catch (error) {
+
+            console.log(
+                "Audio blocked until interaction."
+            );
+
+        }
+
+    }
+
+    setTimeout(
+        () => {
+
+            heartbeatText
+                .classList
+                .remove("visible");
+
+        },
+        250
+    );
+
+}
+
+
+/* ================================================================
+   HEARTBEAT SEQUENCE
+   ================================================================ */
+
+async function heartbeatSequence(
+    beats = 5,
+    delay = 800,
+    intensity = 1
+) {
+
+    for (
+        let i = 0;
+        i < beats;
+        i++
+    ) {
+
+        heartbeat(
+            intensity
+        );
+
+        await wait(
+            delay
+        );
+
+    }
+
+}
+
+
+/* ================================================================
+   SCREEN SHAKE
+   ================================================================ */
+
+function shake(
+    duration = 350
+) {
+
+    game.classList
+        .remove("shake");
+
+    void game.offsetWidth;
+
+    game.classList
+        .add("shake");
+
+    setTimeout(
+        () => {
+
+            game.classList
+                .remove("shake");
+
+        },
+        duration
+    );
+
+}
+
+
+/* ================================================================
+   RED NIGHT
+   ================================================================ */
+
+function redNight(
+    enabled = true
+) {
+
+    if (enabled) {
+
+        game.classList
+            .add("red-night");
+
+    }
+
+    else {
+
+        game.classList
+            .remove("red-night");
+
+    }
+
+}
+
+
+/* ================================================================
+   JUMPSCARE
+   ================================================================ */
+
+async function doJumpscare(
+    text = "👁"
+) {
+
+    jumpscare
+        .querySelector("#jumpscare-face")
+        .textContent =
+        text;
+
+    jumpscare
+        .classList
+        .add("active");
+
+    shake(
+        500
+    );
+
+    if (
+        audio.jumpscare
+    ) {
+
+        try {
+
+            audio.jumpscare
+                .currentTime =
+                0;
+
+            audio.jumpscare
+                .play();
+
+        }
+
+        catch (error) {}
+
+    }
+
+    await wait(
+        1100
+    );
+
+    jumpscare
+        .classList
+        .remove("active");
+
+}
+
+
+/* ================================================================
+   SCENE NAVIGATION
+   ================================================================ */
+
+let currentAction =
+    null;
+
+
+function continueAction(
+    action
+) {
+
+    currentAction =
+        action;
+
+}
+
+
+/* ================================================================
+   DIALOGUE BOX CLICK
+   ================================================================ */
+
+dialogueBox.addEventListener(
+    "click",
+    () => {
+
+        if (typing) {
+
+            skipTyping =
+                true;
+
+            return;
+
+        }
+
+        if (
+            currentAction
+        ) {
+
+            const action =
+                currentAction;
+
+            currentAction =
+                null;
+
+            action();
+
+        }
+
+    }
+);
+
+
+/* ================================================================
+   KEYBOARD CONTROLS
+   ================================================================ */
+
+document.addEventListener(
+    "keydown",
+    event => {
+
+        if (
+            event.key === " " ||
+            event.key === "Enter"
+        ) {
+
+            event.preventDefault();
+
+            dialogueBox.click();
+
+        }
+
+        if (
+            event.key === "Escape"
+        ) {
+
+            clearChoices();
+
+        }
+
+    }
+);
+
+
+/* ================================================================
+   START GAME
+   ================================================================ */
+
+startButton.addEventListener(
+    "click",
+    () => {
+
+        mainMenu
+            .classList
+            .add("hidden");
+
+        dialogueWrapper
+            .classList
+            .add("visible");
+
+        state.started =
+            true;
+
+        saveGame();
+
+        beginIntro();
+
+    }
+);
+
+
+/* ================================================================
+   INTRO
+   ================================================================ */
+
+async function beginIntro() {
+
+    setChapter(
+        "INTRODUCTION"
+    );
+
+    showFrame(
+        2,
+        "The narrator looks down at his hands."
+    );
+
+    await wait(
+        800
+    );
+
+    poe(
+        "True!—nervous—very, very dreadfully nervous I had been and am; but why will you say that I am mad?"
+    );
+
+    continueAction(
+        async () => {
+
+            showFrame(
+                3,
+                "The narrator looks toward the house."
+            );
+
+            thought(
+                "There it is."
+            );
+
+            continueAction(
+                async () => {
+
+                    showFrame(
+                        4,
+                        "Walking toward the distant house."
+                    );
+
+                    poe(
+                        "It is impossible to say how first the idea entered my brain; but once conceived, it haunted me day and night."
+                    );
+
+                    continueAction(
+                        async () => {
+
+                            showFrame(
+                                5,
+                                "The house grows closer."
+                            );
+
+                            thought(
+                                "Tonight, everything will begin."
+                            );
+
+                            continueAction(
+                                async () => {
+
+                                    showFrame(
+                                        6,
+                                        "The narrator reaches the house."
+                                    );
+
+                                    say(
+                                        "",
+                                        "system"
+                                    );
+
+                                    continueAction(
+                                        async () => {
+
+                                            showFrame(
+                                                7,
+                                                "A hand reaches for the door."
+                                            );
+
+                                            say(
+                                                "",
+                                                "system"
+                                            );
+
+                                            continueAction(
+                                                () => {
+
+                                                    sceneOldManArrival();
+
+                                                }
+                                            );
+
+                                        }
+                                    );
+
+                                }
+                            );
+
+                        }
+                    );
+
+                }
+            );
+
+        }
+    );
+
+}
+
+
+/* ================================================================
+   OLD MAN ARRIVAL
+   ================================================================ */
+
+async function sceneOldManArrival() {
+
+    setChapter(
+        "THE HOUSE"
+    );
+
+    showFrame(
+        8,
+        "The front door opens."
+    );
+
+    await wait(
+        500
+    );
+
+    await doJumpscare(
+        "👁"
+    );
+
+    showFrame(
+        9,
+        "The old man's face appears."
+    );
+
+    say(
+        "Good evening. You startled me.",
+        "old-man"
+    );
+
+    continueAction(
+        () => {
+
+            say(
+                "Forgive me. I did not mean to.",
+                "narrator"
+            );
+
+            continueAction(
+                () => {
+
+                    say(
+                        "Come in, then.",
+                        "old-man"
+                    );
+
+                    continueAction(
+                        () => {
+
+                            say(
+                                "Thank you.",
+                                "narrator"
+                            );
+
+                            continueAction(
+                                () => {
+
+                                    morningOne();
+
+                                }
+                            );
+
+                        }
+                    );
+
+                }
+            );
+
+        }
+    );
+
+}
+
+
+/* ================================================================
+   MORNING 1
+   ================================================================ */
+
+function morningOne() {
+
+    setChapter(
+        "MORNING 1"
+    );
+
+    showFrame(
+        10,
+        "The old man sits at the table."
+    );
+
+    say(
+        "Good morning.",
+        "old-man"
+    );
+
+    continueAction(
+        () => {
+
+            say(
+                "Good morning.",
+                "narrator"
+            );
+
+            continueAction(
+                () => {
+
+                    say(
+                        "You look tired.",
+                        "old-man"
+                    );
+
+                    continueAction(
+                        () => {
+
+                            say(
+                                "I did not sleep very well last night.",
+                                "narrator"
+                            );
+
+                            continueAction(
+                                () => {
+
+                                    say(
+                                        "Ah. Neither did I, truth be told.",
+                                        "old-man"
+                                    );
+
+                                    continueAction(
+                                        () => {
+
+                                            say(
+                                                "You?",
+                                                "narrator"
+                                            );
+
+                                            continueAction(
+                                                () => {
+
+                                                    say(
+                                                        "I thought I heard something during the night. Perhaps it was only the wind.",
+                                                        "old-man"
+                                                    );
+
+                                                    continueAction(
+                                                        () => {
+
+                                                            say(
+                                                                "The wind?",
+                                                                "narrator"
+                                                            );
+
+                                                            continueAction(
+                                                                () => {
+
+                                                                    say(
+                                                                        "Yes. This house makes strange noises when the weather changes.",
+                                                                        "old-man"
+                                                                    );
+
+                                                                    continueAction(
+                                                                        () => {
+
+                                                                            say(
+                                                                                "Sit down. You look as though you could use something warm.",
+                                                                                "old-man"
+                                                                            );
+
+                                                                            continueAction(
+                                                                                () => {
+
+                                                                                    say(
+                                                                                        "Thank you.",
+                                                                                        "narrator"
+                                                                                    );
+
+                                                                                    continueAction(
+                                                                                        () => {
+
+                                                                                            say(
+                                                                                                "Have you been sleeping here comfortably?",
+                                                                                                "old-man"
+                                                                                            );
+
+                                                                                            continueAction(
+                                                                                                () => {
+
+                                                                                                    say(
+                                                                                                        "Perfectly.",
+                                                                                                        "narrator"
+                                                                                                    );
+
+                                                                                                    continueAction(
+                                                                                                        () => {
+
+                                                                                                            say(
+                                                                                                                "Good. I am glad.",
+                                                                                                                "old-man"
+                                                                                                            );
+
+                                                                                                            continueAction(
+                                                                                                                () => {
+
+                                                                                                                    say(
+                                                                                                                        "You have been very helpful lately. I appreciate having someone around.",
+                                                                                                                        "old-man"
+                                                                                                                    );
+
+                                                                                                                    continueAction(
+                                                                                                                        () => {
+
+                                                                                                                            say(
+                                                                                                                                "I am happy to help.",
+                                                                                                                                "narrator"
+                                                                                                                            );
+
+                                                                                                                            continueAction(
+                                                                                                                                () => {
+
+                                                                                                                                    say(
+                                                                                                                                        "Then perhaps today will be a quiet day.",
+                                                                                                                                        "old-man"
+                                                                                                                                    );
+
+                                                                                                                                    continueAction(
+                                                                                                                                        () => {
+
+                                                                                                                                            thought(
+                                                                                                                                                "He trusts me. He has no idea what I did last night.",
+                                                                                                                                                () => {
+
+                                                                                                                                                    poe(
+                                                                                                                                                        "And every morning, when the day broke, I went boldly into the chamber, and spoke courageously to him, calling him by name in a hearty tone, and inquiring how he had passed the night.",
+                                                                                                                                                        () => {
+
+                                                                                                                                                            nightOne();
+
+                                                                                                                                                        }
+                                                                                                                                                    );
+
+                                                                                                                                                }
+                                                                                                                                            );
+
+                                                                                                                                        }
+                                                                                                                                    );
+
+                                                                                                                                }
+                                                                                                                            );
+
+                                                                                                                        }
+                                                                                                                    );
+
+                                                                                                                }
+                                                                                                            );
+
+                                                                                                        }
+                                                                                                    );
+
+                                                                                                }
+                                                                                            );
+
+                                                                                        }
+                                                                                    );
+
+                                                                                }
+                                                                            );
+
+                                                                        }
+                                                                    );
+
+                                                                }
+                                                            );
+
+                                                        }
+                                                    );
+
+                                                }
+                                            );
+
+                                        }
+                                    );
+
+                                }
+                            );
+
+                        }
+                    );
+
+                }
+            );
+
+        }
+    );
+
+}
+
+
+/* ================================================================
+   NIGHT 1
+   ================================================================ */
+
+function nightOne() {
+
+    setChapter(
+        "NIGHT 1 — MIDNIGHT"
+    );
+
+    state.night =
+        1;
+
+    redNight(
+        false
+    );
+
+    showFrame(
+        11,
+        "The hallway at midnight."
+    );
+
+    heartbeatText
+        .classList
+        .remove("visible");
+
+    say(
+        "Midnight.",
+        "system"
+    );
+
+    continueAction(
+        () => {
+
+            showFrame(
+                12,
+                "Walking through the hallway."
+            );
+
+            poe(
+                "And every night, about midnight, I turned the latch of his door and opened it—oh, so gently!",
+                () => {
+
+                    showFrame(
+                        13,
+                        "The narrator gets closer."
+                    );
+
+                    say(
+                        "",
+                        "system"
+                    );
+
+                    continueAction(
+                        () => {
+
+                            showFrame(
+                                14,
+                                "The old man's door."
+                            );
+
+                            thought(
+                                "Should I continue?",
+                                () => {
+
+                                    showChoices(
+                                        [
+
+                                            {
+                                                text:
+                                                    "LEAVE",
+
+                                                action:
+                                                    goodEnding
+                                            },
+
+                                            {
+                                                text:
+                                                    "STALK",
+
+                                                action:
+                                                    nightOneStalk
+                                            }
+
+                                        ]
+                                    );
+
+                                }
+                            );
+
+                        }
+                    );
+
+                }
+            );
+
+        }
+    );
+
+}
+
+
+/* ================================================================
+   NIGHT 1 STALK
+   ================================================================ */
+
+function nightOneStalk() {
+
+    setChapter(
+        "NIGHT 1 — THE OLD MAN'S ROOM"
+    );
+
+    showFrame(
+        15,
+        "The old man's door."
+    );
+
+    poe(
+        "I was never kinder to the old man than during the whole week before I killed him.",
+        () => {
+
+            showFrame(
+                16,
+                "The narrator holds the doorknob."
+            );
+
+            poe(
+                "I moved it slowly—very, very slowly, so that I might not disturb the old man's sleep.",
+                () => {
+
+                    showFrame(
+                        17,
+                        "The door opens into darkness."
+                    );
+
+                    say(
+                        "",
+                        "system"
+                    );
+
+                    continueAction(
+                        () => {
+
+                            showFrame(
+                                18,
+                                "The old man sleeping."
+                            );
+
+                            poe(
+                                "It took me an hour to place my whole head within the opening so far that I could see him as he lay upon his bed.",
+                                () => {
+
+                                    thought(
+                                        "Not tonight.",
+                                        () => {
+
+                                            morningTwo();
+
+                                        }
+                                    );
+
+                                }
+                            );
+
+                        }
+                    );
+
+                }
+            );
+
+        }
+    );
+
+}
+
+
+/* ================================================================
+   MORNING 2
+   ================================================================ */
+
+function morningTwo() {
+
+    setChapter(
+        "MORNING 2"
+    );
+
+    showFrame(
+        19,
+        "Morning. The old man prepares breakfast."
+    );
+
+    say(
+        "You're awake early.",
+        "old-man"
+    );
+
+    continueAction(
+        () => {
+
+            say(
+                "So are you.",
+                "narrator"
+            );
+
+            continueAction(
+                () => {
+
+                    say(
+                        "I have always been an early riser.",
+                        "old-man"
+                    );
+
+                    continueAction(
+                        () => {
+
+                            say(
+                                "Did you sleep well?",
+                                "narrator"
+                            );
+
+                            continueAction(
+                                () => {
+
+                                    say(
+                                        "Not particularly.",
+                                        "old-man"
+                                    );
+
+                                    continueAction(
+                                        () => {
+
+                                            say(
+                                                "Why?",
+                                                "narrator"
+                                            );
+
+                                            continueAction(
+                                                () => {
+
+                                                    say(
+                                                        "I thought I heard someone walking outside my room.",
+                                                        "old-man"
+                                                    );
+
+                                                    continueAction(
+                                                        () => {
+
+                                                            say(
+                                                                "Perhaps it was me.",
+                                                                "narrator"
+                                                            );
+
+                                                            continueAction(
+                                                                () => {
+
+                                                                    say(
+                                                                        "Perhaps.",
+                                                                        "old-man"
+                                                                    );
+
+                                                                    continueAction(
+                                                                        () => {
+
+                                                                            say(
+                                                                                "You have been wandering around the house at night?",
+                                                                                "old-man"
+                                                                            );
+
+                                                                            continueAction(
+                                                                                () => {
+
+                                                                                    say(
+                                                                                        "I couldn't sleep.",
+                                                                                        "narrator"
+                                                                                    );
+
+                                                                                    continueAction(
+                                                                                        () => {
+
+                                                                                            say(
+                                                                                                "Well, don't trouble yourself. There is nothing in this house worth losing sleep over.",
+                                                                                                "old-man"
+                                                                                            );
+
+                                                                                            continueAction(
+                                                                                                () => {
+
+                                                                                                    thought(
+                                                                                                        "Nothing? If only he knew.",
+                                                                                                        () => {
+
+                                                                                                            say(
+                                                                                                                "Come. Have some breakfast.",
+                                                                                                                "old-man"
+                                                                                                            );
+
+                                                                                                            continueAction(
+                                                                                                                () => {
+
+                                                                                                                    say(
+                                                                                                                        "Of course.",
+                                                                                                                        "narrator"
+                                                                                                                    );
+
+                                                                                                                    continueAction(
+                                                                                                                        () => {
+
+                                                                                                                            morningChoice(
+                                                                                                                                nightThree
+                                                                                                                            );
+
+                                                                                                                        }
+                                                                                                                    );
+
+                                                                                                                }
+                                                                                                            );
+
+                                                                                                        }
+                                                                                                    );
+
+                                                                                                }
+                                                                                            );
+
+                                                                                        }
+                                                                                    );
+
+                                                                                }
+                                                                            );
+
+                                                                        }
+                                                                    );
+
+                                                                }
+                                                            );
+
+                                                        }
+                                                    );
+
+                                                }
+                                            );
+
+                                        }
+                                    );
+
+                                }
+                            );
+
+                        }
+                    );
+
+                }
+            );
+
+        }
+    );
+
+}
+
+
+/* ================================================================
+   MORNING KIND / MEAN CHOICE
+   ================================================================ */
+
+function morningChoice(
+    nextScene
+) {
+
+    showChoices(
+        [
+
+            {
+                text:
+                    "BE KIND",
+
+                action:
+                    () => {
+
+                        state.kindness++;
+
+                        say(
+                            "Thank you for being here.",
+                            "old-man"
+                        );
+
+                        continueAction(
+                            () => {
+
+                                thought(
+                                    "He trusts me.",
+                                    () => {
+
+                                        nextScene();
+
+                                    }
+                                );
+
+                            }
+                        );
+
+                    }
+
+            },
+
+            {
+                text:
+                    "BE MEAN",
+
+                action:
+                    () => {
+
+                        state.meanCount++;
+
+                        showFrame(
+                            19,
+                            "The old man looks hurt."
+                        );
+
+                        say(
+                            "Is something troubling you?",
+                            "old-man"
+                        );
+
+                        continueAction(
+                            () => {
+
+                                say(
+                                    "No.",
+                                    "narrator"
+                                );
+
+                                continueAction(
+                                    () => {
+
+                                        say(
+                                            "...Very well.",
+                                            "old-man"
+                                        );
+
+                                        continueAction(
+                                            () => {
+
+                                                nextScene();
+
+                                            }
+                                        );
+
+                                    }
+                                );
+
+                            }
+                        );
+
+                    }
+
+            }
+
+        ]
+    );
+
+}
+
+
+/* ================================================================
+   NIGHT 3
+   ================================================================ */
+
+function nightThree() {
+
+    setChapter(
+        "NIGHT 3"
+    );
+
+    state.night =
+        3;
+
+    showFrame(
+        20,
+        "The hallway is darker now."
+    );
+
+    thought(
+        "The darkness feels different tonight.",
+        () => {
+
+            showFrame(
+                21,
+                "Walking through the hallway."
+            );
+
+            poe(
+                "For his gold I had no desire.",
+                () => {
+
+                    showFrame(
+                        22,
+                        "Closer to the door."
+                    );
+
+                    thought(
+                        "And still that eye follows me.",
+                        () => {
+
+                            showFrame(
+                                23,
+                                "The old man's door."
+                            );
+
+                            poe(
+                                "I think it was his eye! yes, it was this!",
+                                () => {
+
+                                    thought(
+                                        "That eye.",
+                                        () => {
+
+                                            nightChoice(
+                                                3
+                                            );
+
+                                        }
+                                    );
+
+                                }
+                            );
+
+                        }
+                    );
+
+                }
+            );
+
+        }
+    );
+
+}
+
+
+/* ================================================================
+   NIGHT 3 / 5 CHOICE
+   ================================================================ */
+
+function nightChoice(
+    nightNumber
+) {
+
+    showChoices(
+        [
+
+            {
+                text:
+                    "LEAVE",
+
+                action:
+                    goodEnding
+            },
+
+            {
+                text:
+                    "ATTACK",
+
+                action:
+                    () => {
+
+                        if (
+                            nightNumber === 3
+                        ) {
+
+                            state.night3Choice =
+                                "kill";
+
+                        }
+
+                        else {
+
+                            state.night5Choice =
+                                "kill";
+
+                        }
+
+                        badNightAttack(
+                            nightNumber
+                        );
+
+                    }
+
+            },
+
+            {
+                text:
+                    "STALK",
+
+                action:
+                    () => {
+
+                        if (
+                            nightNumber === 3
+                        ) {
+
+                            state.night3Choice =
+                                "stalk";
+
+                        }
+
+                        else {
+
+                            state.night5Choice =
+                                "stalk";
+
+                        }
+
+                        if (
+                            nightNumber === 3
+                        ) {
+
+                            stalkNightThree();
+
+                        }
+
+                        else {
+
+                            stalkNightFive();
+
+                        }
+
+                    }
+
+            }
+
+        ]
+    );
+
+}
+
+
+/* ================================================================
+   NIGHT 3 STALK
+   ================================================================ */
+
+function stalkNightThree() {
+
+    setChapter(
+        "NIGHT 3 — STALK"
+    );
+
+    showFrame(
+        30,
+        "The narrator approaches with the lantern."
+    );
+
+    poe(
+        "I put in a dark lantern, all closed, closed, so that no light shone out.",
+        () => {
+
+            thought(
+                "Not yet.",
+                () => {
+
+                    morningThree();
+
+                }
+            );
+
+        }
+    );
+
+}
+
+
+/* ================================================================
+   MORNING 3
+   ================================================================ */
+
+function morningThree() {
+
+    setChapter(
+        "MORNING 3"
+    );
+
+    showFrame(
+        10,
+        "Morning. The old man smiles."
+    );
+
+    if (
+        state.meanCount > state.kindness
+    ) {
+
+        morningThreeMean();
+
+    }
+
+    else {
+
+        morningThreeKind();
+
+    }
+
+}
+
+
+/* ================================================================
+   MORNING 3 — KIND
+   ================================================================ */
+
+function morningThreeKind() {
+
+    say(
+        "There you are.",
+        "old-man"
+    );
+
+    continueAction(
+        () => {
+
+            say(
+                "Good morning.",
+                "narrator"
+            );
+
+            continueAction(
+                () => {
+
+                    say(
+                        "I was beginning to wonder if you had gone out.",
+                        "old-man"
+                    );
+
+                    continueAction(
+                        () => {
+
+                            say(
+                                "No. I am still here.",
+                                "narrator"
+                            );
+
+                            continueAction(
+                                () => {
+
+                                    say(
+                                        "Good.",
+                                        "old-man"
+                                    );
+
+                                    continueAction(
+                                        () => {
+
+                                            say(
+                                                "Sit. I made enough for two.",
+                                                "old-man"
+                                            );
+
+                                            continueAction(
+                                                () => {
+
+                                                    say(
+                                                        "Thank you.",
+                                                        "narrator"
+                                                    );
+
+                                                    continueAction(
+                                                        () => {
+
+                                                            say(
+                                                                "You know, I have become rather accustomed to having you around.",
+                                                                "old-man"
+                                                            );
+
+                                                            continueAction(
+                                                                () => {
+
+                                                                    say(
+                                                                        "Have you?",
+                                                                        "narrator"
+                                                                    );
+
+                                                                    continueAction(
+                                                                        () => {
+
+                                                                            say(
+                                                                                "Yes. The house feels less empty.",
+                                                                                "old-man"
+                                                                            );
+
+                                                                            continueAction(
+                                                                                () => {
+
+                                                                                    say(
+                                                                                        "Don't look so surprised. Even an old man appreciates company.",
+                                                                                        "old-man"
+                                                                                    );
+
+                                                                                    continueAction(
+                                                                                        () => {
+
+                                                                                            say(
+                                                                                                "I suppose everyone does.",
+                                                                                                "narrator"
+                                                                                            );
+
+                                                                                            continueAction(
+                                                                                                () => {
+
+                                                                                                    say(
+                                                                                                        "Indeed.",
+                                                                                                        "old-man"
+                                                                                                    );
+
+                                                                                                    continueAction(
+                                                                                                        () => {
+
+                                                                                                            say(
+                                                                                                                "Whatever troubles you have, you needn't carry them alone.",
+                                                                                                                "old-man"
+                                                                                                            );
+
+                                                                                                            continueAction(
+                                                                                                                () => {
+
+                                                                                                                    thought(
+                                                                                                                        "If only you knew what troubles me.",
+                                                                                                                        () => {
+
+                                                                                                                            nightFive();
+
+                                                                                                                        }
+                                                                                                                    );
+
+                                                                                                                }
+                                                                                                            );
+
+                                                                                                        }
+                                                                                                    );
+
+                                                                                                }
+                                                                                            );
+
+                                                                                        }
+                                                                                    );
+
+                                                                                }
+                                                                            );
+
+                                                                        }
+                                                                    );
+
+                                                                }
+                                                            );
+
+                                                        }
+                                                    );
+
+                                                }
+                                            );
+
+                                        }
+                                    );
+
+                                }
+                            );
+
+                        }
+                    );
+
+                }
+            );
+
+        }
+    );
+
+}
+
+
+/* ================================================================
+   MORNING 3 — MEAN
+   ================================================================ */
+
+function morningThreeMean() {
+
+    showFrame(
+        10,
+        "The old man looks sad."
+    );
+
+    say(
+        "Good morning.",
+        "narrator"
+    );
+
+    continueAction(
+        () => {
+
+            say(
+                "I don't know what I've done to deserve your anger.",
+                "old-man"
+            );
+
+            continueAction(
+                () => {
+
+                    say(
+                        "You have done nothing.",
+                        "narrator"
+                    );
+
+                    continueAction(
+                        () => {
+
+                            say(
+                                "Then why do you speak to me like that?",
+                                "old-man"
+                            );
+
+                            continueAction(
+                                () => {
+
+                                    say(
+                                        "I have been busy.",
+                                        "narrator"
+                                    );
+
+                                    continueAction(
+                                        () => {
+
+                                            say(
+                                                "You used to be kinder.",
+                                                "old-man"
+                                            );
+
+                                            continueAction(
+                                                () => {
+
+                                                    thought(
+                                                        "His sadness irritates me.",
+                                                        () => {
+
+                                                            nightFive();
+
+                                                        }
+                                                    );
+
+                                                }
+                                            );
+
+                                        }
+                                    );
+
+                                }
+                            );
+
+                        }
+                    );
+
+                }
+            );
+
+        }
+    );
+
+}
+
+
+/* ================================================================
+   NIGHT 5
+   ================================================================ */
+
+function nightFive() {
+
+    setChapter(
+        "NIGHT 5"
+    );
+
+    state.night =
+        5;
+
+    showFrame(
+        31,
+        "A much darker hallway."
+    );
+
+    thought(
+        "Five nights.",
+        () => {
+
+            showFrame(
+                32,
+                "The narrator moves closer."
+            );
+
+            thought(
+                "And still that eye follows me.",
+                () => {
+
+                    showFrame(
+                        33,
+                        "The old man's door."
+                    );
+
+                    poe(
+                        "It was not the old man who vexed me, but his Evil Eye.",
+                        () => {
+
+                            nightChoice(
+                                5
+                            );
+
+                        }
+                    );
+
+                }
+            );
+
+        }
+    );
+
+}
+
+
+/* ================================================================
+   NIGHT 5 STALK
+
+   New frame 52: the old man's door creaking open in the dark.
+   Plays audio.nightFiveStalk once you provide a track (see the
+   AUDIO HELPERS section near the top of the script). Then a
+   midnight clock transition (11:58 PM -> 12:00 AM) leads into
+   Night 8.
+   ================================================================ */
+
+function stalkNightFive() {
+
+    setChapter(
+        "NIGHT 5 — STALK"
+    );
+
+    showFrame(
+        52,
+        "The old man's door creaks open in the dark."
+    );
+
+    playAudio(
+        "nightFiveStalk"
+    );
+
+    say(
+        "",
+        "system"
+    );
+
+    continueAction(
+        async () => {
+
+            stopAudio(
+                "nightFiveStalk"
+            );
+
+            await midnightTransition();
+
+            finalNight();
+
+        }
+    );
+
+}
+
+
+/* ================================================================
+   BAD NIGHT ATTACK
+   ================================================================ */
+
+async function badNightAttack(
+    nightNumber
+) {
+
+    setChapter(
+        `NIGHT ${nightNumber} — ATTACK`
+    );
+
+    showFrame(
+        24,
+        "The narrator enters the room."
+    );
+
+    await wait(
+        500
+    );
+
+    showFrame(
+        25,
+        "The narrator approaches the bed."
+    );
+
+    await wait(
+        600
+    );
+
+    showFrame(
+        26,
+        "The old man suddenly wakes."
+    );
+
+    say(
+        "Who's there?",
+        "old-man"
+    );
+
+    continueAction(
+        async () => {
+
+            await doJumpscare(
+                "👁"
+            );
+
+            showFrame(
+                27,
+                "The old man's eye."
+            );
+
+            shake(
+                400
+            );
+
+            await heartbeatSequence(
+                4,
+                350,
+                1.4
+            );
+
+            showFrame(
+                28,
+                "Everything becomes chaotic."
+            );
+
+            await wait(
+                700
+            );
+
+            showFrame(
+                29,
+                "Black."
+            );
+
+            thought(
+                "He saw me.",
+                () => {
+
+                    badEnding(
+                        "The old man discovered the narrator before the plan could be completed."
+                    );
+
+                }
+            );
+
+        }
+    );
+
+}
+
+
+/* ================================================================
+   FINAL NIGHT
+   ================================================================ */
+
+function finalNight() {
+
+    setChapter(
+        "NIGHT 8 — THE FINAL NIGHT"
+    );
+
+    state.night =
+        8;
+
+    redNight(
+        true
+    );
+
+    showFrame(
+        34,
+        "The hallway has become red."
+    );
+
+    heartbeatSequence(
+        2,
+        900,
+        0.8
+    ).then(
+        () => {
+
+            poe(
+                "Upon the eighth night I was more than usually cautious in opening the door.",
+                () => {
+
+                    showFrame(
+                        35,
+                        "Closer to the old man's door."
+                    );
+
+                    heartbeat(
+                        1
+                    );
+
+                    continueAction(
+                        () => {
+
+                            showFrame(
+                                36,
+                                "Almost at the door."
+                            );
+
+                            heartbeat(
+                                1.2
+                            );
+
+                            continueAction(
+                                () => {
+
+                                    showFrame(
+                                        37,
+                                        "The door opens. The old man is waiting."
+                                    );
+
+                                    say(
+                                        "Who's there?",
+                                        "old-man"
+                                    );
+
+                                    continueAction(
+                                        () => {
+
+                                            poe(
+                                                "I kept quite still and said nothing.",
+                                                () => {
+
+                                                    poe(
+                                                        "Presently I heard a slight groan, and I knew it was the groan of mortal terror.",
+                                                        () => {
+
+                                                            poe(
+                                                                "It was the beating of the old man's heart.",
+                                                                () => {
+
+                                                                    heartbeatSequence(
+                                                                        5,
+                                                                        500,
+                                                                        1.5
+                                                                    ).then(
+                                                                        () => {
+
+                                                                            poe(
+                                                                                "It grew quicker and quicker, and louder and louder every instant.",
+                                                                                () => {
+
+                                                                                    finalChoice();
+
+                                                                                }
+                                                                            );
+
+                                                                        }
+                                                                    );
+
+                                                                }
+                                                            );
+
+                                                        }
+                                                    );
+
+                                                }
+                                            );
+
+                                        }
+                                    );
+
+                                }
+                            );
+
+                        }
+                    );
+
+                }
+            );
+
+        }
+    );
+
+}
+
+
+/* ================================================================
+   FINAL CHOICE
+   ================================================================ */
+
+function finalChoice() {
+
+    showChoices(
+        [
+
+            {
+                text:
+                    "ATTACK",
+                action:
+                    finalAttack
+            },
+
+            {
+                text:
+                    "BED ROUTE",
+                action:
+                    finalCanon
+            }
+
+        ]
+    );
+
+}
+
+
+/* ================================================================
+   FINAL ATTACK
+   ================================================================ */
+
+async function finalAttack() {
+
+    state.finalChoice =
+        "attack";
+
+    setChapter(
+        "THE DEED"
+    );
+
+    showFrame(
+        38,
+        "The narrator moves toward the old man."
+    );
+
+    heartbeat(
+        1.5
+    );
+
+    await wait(
+        600
+    );
+
+    showFrame(
+        39,
+        "The old man recoils."
+    );
+
+    shake(
+        300
+    );
+
+    await wait(
+        500
+    );
+
+    showFrame(
+        40,
+        "The struggle becomes chaotic."
+    );
+
+    heartbeat(
+        1.8
+    );
+
+    await wait(
+        500
+    );
+
+    showFrame(
+        41,
+        "The heartbeat overwhelms the scene."
+    );
+
+    await heartbeatSequence(
+        5,
+        300,
+        2
+    );
+
+    showFrame(
+        42,
+        "Black."
+    );
+
+    poe(
+        "He shrieked once—once only.",
+        () => {
+
+            badEnding(
+                "The neighbors heard the disturbance. When the police arrived, the narrator's secret could not remain hidden."
+            );
+
+        }
+    );
+
+}
+
+
+/* ================================================================
+   CANON FINAL ROUTE
+   ================================================================ */
+
+function finalCanon() {
+
+    state.finalChoice =
+        "canon";
+
+    setChapter(
+        "THE DEED"
+    );
+
+    showFrame(
+        43,
+        "The lantern opens."
+    );
+
+    poe(
+        "With a loud yell, I threw open the lantern and leaped into the room.",
+        () => {
+
+            showFrame(
+                44,
+                "The narrator rushes forward."
+            );
+
+            poe(
+                "He shrieked once—once only.",
+                () => {
+
+                    showFrame(
+                        45,
+                        "The struggle."
+                    );
+
+                    poe(
+                        "In an instant I dragged him to the floor, and pulled the heavy bed over him.",
+                        () => {
+
+                            showFrame(
+                                46,
+                                "Silence."
+                            );
+
+                            poe(
+                                "At length it ceased. The old man was dead.",
+                                () => {
+
+                                    bodyScene();
+
+                                }
+                            );
+
+                        }
+                    );
+
+                }
+            );
+
+        }
+    );
+
+}
+
+
+/* ================================================================
+   BODY SCENE
+   ================================================================ */
+
+function bodyScene() {
+
+    setChapter(
+        "THE BODY"
+    );
+
+    showFrame(
+        47,
+        "The narrator looks down."
+    );
+
+    poe(
+        "I placed my hand upon the heart and held it there many minutes.",
+        () => {
+
+            poe(
+                "He was stone dead. His eye would trouble me no more.",
+                () => {
+
+                    showChoices(
+                        [
+
+                            {
+                                text:
+                                    "ATTIC",
+
+                                action:
+                                    () => {
+
+                                        state.bodyLocation =
+                                            "attic";
+
+                                        badBodyEnding();
+
+                                    }
+
+                            },
+
+                            {
+                                text:
+                                    "BATHROOM",
+
+                                action:
+                                    () => {
+
+                                        state.bodyLocation =
+                                            "bathroom";
+
+                                        badBodyEnding();
+
+                                    }
+
+                            },
+
+                            {
+                                text:
+                                    "FLOORBOARDS",
+
+                                action:
+                                    canonBodyEnding
+
+                            }
+
+                        ]
+                    );
+
+                }
+            );
+
+        }
+    );
+
+}
+
+
+/* ================================================================
+   BAD BODY ENDING
+   ================================================================ */
+
+function badBodyEnding() {
+
+    setChapter(
+        "HIDING THE BODY"
+    );
+
+    if (
+        state.bodyLocation ===
+        "attic"
+    ) {
+
+        thought(
+            "The attic. No one will look there.",
+            () => {
+
+                badEnding(
+                    "The police searched the house and immediately discovered the body."
+                );
+
+            }
+        );
+
+    }
+
+    else {
+
+        thought(
+            "The bathroom. They will never find it there.",
+            () => {
+
+                badEnding(
+                    "The police searched the house and immediately discovered the body."
+                );
+
+            }
+        );
+
+    }
+
+}
+
+
+/* ================================================================
+   CANON BODY
+   ================================================================ */
+
+function canonBodyEnding() {
+
+    setChapter(
+        "HIDING THE BODY — CANON"
+    );
+
+    showFrame(
+        48,
+        "The floorboards are opened."
+    );
+
+    poe(
+        "I then took up three planks from the flooring of the chamber, and deposited all between the scantlings.",
+        () => {
+
+            showFrame(
+                49,
+                "The floorboards are replaced."
+            );
+
+            poe(
+                "I then replaced the boards so cleverly, so cunningly, that no human eye—not even his—could have detected anything wrong.",
+                () => {
+
+                    poe(
+                        "There was nothing to wash out—no stain of any kind—no blood-spot whatever.",
+                        () => {
+
+                            policeScene();
+
+                        }
+                    );
+
+                }
+            );
+
+        }
+    );
+
+}
+
+
+/* ================================================================
+   POLICE SCENE
+   ================================================================ */
+
+function policeScene() {
+
+    setChapter(
+        "THE POLICE"
+    );
+
+    redNight(
+        false
+    );
+
+    showFrame(
+        50,
+        "The front door."
+    );
+
+    poe(
+        "As the bell sounded the hour, there came a knocking at the street door.",
+        () => {
+
+            say(
+                "KNOCK. KNOCK. KNOCK.",
+                "system"
+            );
+
+            continueAction(
+                () => {
+
+                    poe(
+                        "I went down to open it with a light heart,—for what had I now to fear?",
+                        () => {
+
+                            say(
+                                "We received a report concerning a disturbance during the night.",
+                                "narrator"
+                            );
+
+                            continueAction(
+                                () => {
+
+                                    say(
+                                        "A disturbance?",
+                                        "narrator"
+                                    );
+
+                                    continueAction(
+                                        () => {
+
+                                            say(
+                                                "A neighbor heard a shriek.",
+                                                "narrator"
+                                            );
+
+                                            continueAction(
+                                                () => {
+
+                                                    poe(
+                                                        "A shriek had been heard by a neighbour during the night; suspicion of foul play had been aroused.",
+                                                        () => {
+
+                                                            policeSearch();
+
+                                                        }
+                                                    );
+
+                                                }
+                                            );
+
+                                        }
+                                    );
+
+                                }
+                            );
+
+                        }
+                    );
+
+                }
+            );
+
+        }
+    );
+
+}
+
+
+/* ================================================================
+   POLICE SEARCH
+   ================================================================ */
+
+function policeSearch() {
+
+    setChapter(
+        "THE SEARCH"
+    );
+
+    poe(
+        "I bade the gentlemen welcome.",
+        () => {
+
+            say(
+                "Please. Search the house.",
+                "narrator"
+            );
+
+            continueAction(
+                () => {
+
+                    poe(
+                        "I took my visitors all over the house.",
+                        () => {
+
+                            poe(
+                                "I led them, at length, to his chamber.",
+                                () => {
+
+                                    poe(
+                                        "I placed my own seat upon the very spot beneath which reposed the corpse of the victim.",
+                                        () => {
+
+                                            policeHeartbeat();
+
+                                        }
+                                    );
+
+                                }
+                            );
+
+                        }
+                    );
+
+                }
+            );
+
+        }
+    );
+
+}
+
+
+/* ================================================================
+   POLICE HEARTBEAT
+   ================================================================ */
+
+async function policeHeartbeat() {
+
+    setChapter(
+        "THE HEART"
+    );
+
+    showFrame(
+        51,
+        "The narrator sits over the hidden body."
+    );
+
+    poe(
+        "My head ached, and I fancied a ringing in my ears.",
+        async () => {
+
+            await heartbeatSequence(
+                2,
+                1000,
+                0.7
+            );
+
+            poe(
+                "The ringing became more distinct.",
+                async () => {
+
+                    await heartbeatSequence(
+                        3,
+                        700,
+                        0.9
+                    );
+
+                    poe(
+                        "But it continued and gained definiteness.",
+                        async () => {
+
+                            say(
+                                "So, gentlemen, what brings you here tonight?",
+                                "narrator"
+                            );
+
+                            continueAction(
+                                async () => {
+
+                                    await heartbeatSequence(
+                                        4,
+                                        450,
+                                        1.2
+                                    );
+
+                                    poe(
+                                        "I talked more freely to get rid of the feeling: but it continued and gained definiteness.",
+                                        async () => {
+
+                                            await heartbeatSequence(
+                                                5,
+                                                350,
+                                                1.5
+                                            );
+
+                                            policeBreakdown();
+
+                                        }
+                                    );
+
+                                }
+                            );
+
+                        }
+                    );
+
+                }
+            );
+
+        }
+    );
+
+}
+
+
+/* ================================================================
+   POLICE BREAKDOWN
+   ================================================================ */
+
+async function policeBreakdown() {
+
+    setChapter(
+        "CONFESSION"
+    );
+
+    poe(
+        "It grew louder—louder—louder!",
+        async () => {
+
+            shake(
+                300
+            );
+
+            await wait(
+                300
+            );
+
+            poe(
+                "I arose and argued about trifles, in a high key and with violent gesticulations.",
+                async () => {
+
+                    await heartbeatSequence(
+                        4,
+                        300,
+                        1.7
+                    );
+
+                    poe(
+                        "Oh God! what could I do?",
+                        async () => {
+
+                            await wait(
+                                300
+                            );
+
+                            poe(
+                                "I foamed—I raved—I swore!",
+                                async () => {
+
+                                    await heartbeatSequence(
+                                        6,
+                                        250,
+                                        2
+                                    );
+
+                                    poe(
+                                        "It grew louder—louder—louder—louder!",
+                                        () => {
+
+                                            finalConfession();
+
+                                        }
+                                    );
+
+                                }
+                            );
+
+                        }
+                    );
+
+                }
+            );
+
+        }
+    );
+
+}
+
+
+/* ================================================================
+   FINAL CONFESSION
+   ================================================================ */
+
+function finalConfession() {
+
+    setChapter(
+        "THE CONFESSION"
+    );
+
+    heartbeat(
+        2
+    );
+
+    say(
+        "Villains! dissemble no more!",
+        "narrator"
+    );
+
+    continueAction(
+        () => {
+
+            say(
+                "I admit the deed!",
+                "narrator"
+            );
+
+            continueAction(
+                () => {
+
+                    say(
+                        "Tear up the planks! Here, here!",
+                        "narrator"
+                    );
+
+                    continueAction(
+                        () => {
+
+                            poe(
+                                "Villains! dissemble no more! I admit the deed!—tear up the planks! here, here!—it is the beating of his hideous heart!",
+                                () => {
+
+                                    heartbeatFlash
+                                        .classList
+                                        .remove("beat");
+
+                                    ending(
+                                        "CANON ENDING",
+                                        "The narrator's guilt finally overwhelms him, and he confesses to the police."
+                                    );
+
+                                }
+                            );
+
+                        }
+                    );
+
+                }
+            );
+
+        }
+    );
+
+}
+
+
+/* ================================================================
+   GOOD ENDING
+   ================================================================ */
+
+function goodEnding() {
+
+    state.leftAtNight1 =
+        true;
+
+    state.ending =
+        "good";
+
+    redNight(
+        false
+    );
+
+    clearChoices();
+
+    setChapter(
+        "THE CHOICE TO LEAVE"
+    );
+
+    showFrame(
+        14,
+        "The narrator steps away from the old man's door."
+    );
+
+    poe(
+        "I loved the old man. He had never wronged me. He had never given me insult.",
+        () => {
+
+            thought(
+                "What am I doing?",
+                () => {
+
+                    say(
+                        "For the first time, I understood that the thought inside my head was not something I could control alone.",
+                        "narrator"
+                    );
+
+                    continueAction(
+                        () => {
+
+                            say(
+                                "I sought help.",
+                                "narrator"
+                            );
+
+                            continueAction(
+                                () => {
+
+                                    ending(
+                                        "GOOD ENDING",
+                                        "The narrator leaves before harming the old man and seeks help instead."
+                                    );
+
+                                }
+                            );
+
+                        }
+                    );
+
+                }
+            );
+
+        }
+    );
+
+}
+
+
+/* ================================================================
+   BAD ENDING
+   ================================================================ */
+
+function badEnding(
+    description
+) {
+
+    state.ending =
+        "bad";
+
+    redNight(
+        false
+    );
+
+    ending(
+        "BAD ENDING",
+        description
+    );
+
+}
+
+
+/* ================================================================
+   ENDING
+   ================================================================ */
+
+function ending(
+    title,
+    description
+) {
+
+    state.completed =
+        true;
+
+    saveGame();
+
+    clearChoices();
+
+    endingType.textContent =
+        title;
+
+    endingDescription.textContent =
+        description;
+
+    endingScreen
+        .classList
+        .add("visible");
+
+}
+
+
+/* ================================================================
+   RESTART
+   ================================================================ */
+
+restartButton.addEventListener(
+    "click",
+    () => {
+
+        localStorage.removeItem(
+            "tellTaleHeartSave"
+        );
+
+        state = {
+            ...defaultState
+        };
+
+        endingScreen
+            .classList
+            .remove("visible");
+
+        dialogueWrapper
+            .classList
+            .remove("visible");
+
+        redNight(
+            false
+        );
+
+        mainMenu
+            .classList
+            .remove("hidden");
+
+        setChapter(
+            "THE TELL-TALE HEART"
+        );
+
+        showFrame(
+            1,
+            "The house waits in the distance."
+        );
+
+    }
+);
+
+
+/* ================================================================
+   SKIP TEXT
+   ================================================================ */
+
+skipButton.addEventListener(
+    "click",
+    () => {
+
+        if (
+            typing
+        ) {
+
+            skipTyping =
+                true;
+
+        }
+
+    }
+);
+
+
+/* ================================================================
+   SAVE
+   ================================================================ */
+
+function saveGame() {
+
+    try {
+
+        localStorage.setItem(
+            "tellTaleHeartSave",
+            JSON.stringify(
+                state
+            )
+        );
+
+    }
+
+    catch (
+        error
+    ) {
+
+        console.warn(
+            "Could not save game.",
+            error
+        );
+
+    }
+
+}
+
+
+saveButton.addEventListener(
+    "click",
+    () => {
+
+        saveGame();
+
+        const original =
+            saveButton.textContent;
+
+        saveButton.textContent =
+            "SAVED";
+
+        setTimeout(
+            () => {
+
+                saveButton.textContent =
+                    original;
+
+            },
+            1000
+        );
+
+    }
+);
+
+
+/* ================================================================
+   LOAD SAVE
+   ================================================================ */
+
+function loadGame() {
+
+    try {
+
+        const saved =
+            localStorage.getItem(
+                "tellTaleHeartSave"
+            );
+
+        if (!saved)
+            return;
+
+        const parsed =
+            JSON.parse(
+                saved
+            );
+
+        state = {
+            ...defaultState,
+            ...parsed
+        };
+
+    }
+
+    catch (
+        error
+    ) {
+
+        console.warn(
+            "Save could not be loaded.",
+            error
+        );
+
+    }
+
+}
+
+
+/* ================================================================
+   INITIALIZATION
+   ================================================================ */
+
+function initialize() {
+
+    loadGame();
+
+    setChapter(
+        "THE TELL-TALE HEART"
+    );
+
+    showFrame(
+        1,
+        "The house waits in the distance."
+    );
+
+    say(
+        "Some stories should never be told.",
+        "thought"
+    );
+
+    currentAction =
+        null;
+
+}
+
+
+/* ================================================================
+   START
+   ================================================================ */
+
+initialize();
+
+
+/* ================================================================
+   END OF GAME ENGINE
+   ================================================================ */
+
+</script>
+
+</body>
+</html>
