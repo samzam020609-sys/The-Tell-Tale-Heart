@@ -25,6 +25,7 @@
             /* Character colors */
             --narrator: #6fa8ff;
             --old-man: #d45b5b;
+            --police: #4fd1a5;
 
             /* Other text colors */
             --thought: #b78cff;
@@ -586,6 +587,10 @@
             color: var(--old-man);
         }
 
+        #speaker.police {
+            color: var(--police);
+        }
+
         #speaker.poe {
             color: var(--poe);
         }
@@ -621,6 +626,10 @@
             color: var(--poe);
 
             font-style: italic;
+        }
+
+        #dialogue-text.police {
+            color: var(--police);
         }
 
         #continue-hint {
@@ -994,6 +1003,32 @@
         }
 
         /* =========================================================
+           SLOW FADE TO / FROM BLACK (scene transitions)
+           ========================================================= */
+
+        #fade-black {
+            position: absolute;
+
+            inset: 0;
+
+            z-index: 150;
+
+            background: #000;
+
+            opacity: 0;
+
+            visibility: hidden;
+
+            pointer-events: none;
+        }
+
+        #fade-black.active {
+            visibility: visible;
+
+            pointer-events: auto;
+        }
+
+        /* =========================================================
            JUMPSCARE
            ========================================================= */
 
@@ -1147,6 +1182,85 @@
                 rgba(255,255,255,0.55);
 
             line-height: 1.8;
+        }
+
+        /* Movie-style rolling credits, below the PLAY AGAIN button */
+        #credits {
+            position: relative;
+
+            width: min(620px, 92vw);
+            height: min(30vh, 250px);
+
+            margin-top: 40px;
+
+            overflow: hidden;
+
+            -webkit-mask-image:
+                linear-gradient(to bottom, transparent 0%, #000 18%, #000 82%, transparent 100%);
+            mask-image:
+                linear-gradient(to bottom, transparent 0%, #000 18%, #000 82%, transparent 100%);
+        }
+
+        #credits-roll {
+            position: absolute;
+
+            left: 0;
+            right: 0;
+            top: 0;
+
+            text-align: center;
+
+            transform: translateY(100%);
+        }
+
+        #credits-roll.rolling {
+            animation:
+                creditsRoll 32s linear infinite;
+        }
+
+        @keyframes creditsRoll {
+            0%   { transform: translateY(calc(min(30vh, 250px))); }
+            100% { transform: translateY(-100%); }
+        }
+
+        .credit-title {
+            margin-bottom: 34px;
+
+            color: rgba(255,255,255,0.9);
+
+            font-size: 18px;
+
+            letter-spacing: 4px;
+
+            line-height: 1.6;
+
+            text-transform: uppercase;
+        }
+
+        .credit-block {
+            margin-bottom: 28px;
+        }
+
+        .credit-role {
+            color: rgba(255,255,255,0.45);
+
+            font-size: 11px;
+
+            letter-spacing: 4px;
+
+            text-transform: uppercase;
+        }
+
+        .credit-name {
+            margin-top: 6px;
+
+            color: rgba(255,255,255,0.85);
+
+            font-size: 16px;
+
+            letter-spacing: 2px;
+
+            line-height: 1.6;
         }
 
         #restart-button {
@@ -1482,6 +1596,9 @@
          JUMPSCARE
          ========================================================= -->
 
+    <div id="fade-black"></div>
+
+
     <div id="jumpscare">
 
         <div id="jumpscare-face">
@@ -1510,6 +1627,53 @@
         <button id="restart-button">
             PLAY AGAIN
         </button>
+
+        <div id="credits">
+
+            <div id="credits-roll">
+
+                <div class="credit-title">
+                    A Story made by<br>Group 1: Achilles' Heel
+                </div>
+
+                <div class="credit-block">
+                    <div class="credit-role">Drawing</div>
+                    <div class="credit-name">Amiel Amparado<br>Tristan Aloya<br>John Pomeda</div>
+                </div>
+
+                <div class="credit-block">
+                    <div class="credit-role">Old Man</div>
+                    <div class="credit-name">Ysiel Padilla</div>
+                </div>
+
+                <div class="credit-block">
+                    <div class="credit-role">Police</div>
+                    <div class="credit-name">Ysiel Padilla</div>
+                </div>
+
+                <div class="credit-block">
+                    <div class="credit-role">Narrator / Edgar Allan Poe</div>
+                    <div class="credit-name">Ysiel Padilla</div>
+                </div>
+
+                <div class="credit-block">
+                    <div class="credit-role">Programmer</div>
+                    <div class="credit-name">Simon Zamoranos</div>
+                </div>
+
+                <div class="credit-block">
+                    <div class="credit-role">Story</div>
+                    <div class="credit-name">Entire Achilles' Heel</div>
+                </div>
+
+                <div class="credit-block">
+                    <div class="credit-role">PPT</div>
+                    <div class="credit-name">Elizabeth Zuniga<br>Krysthalle Gaspar<br>Xam Vilbar</div>
+                </div>
+
+            </div>
+
+        </div>
 
     </div>
 
@@ -1614,6 +1778,12 @@ const centerMessageSubtitle =
 
 const blackScreen =
     document.getElementById("black-screen");
+
+const fadeBlack =
+    document.getElementById("fade-black");
+
+const creditsRoll =
+    document.getElementById("credits-roll");
 
 const blackScreenTime =
     document.getElementById("black-screen-time");
@@ -1785,6 +1955,22 @@ const AUDIO_FILES = {
     "5-15": "audio/scene5/5-15.mp4",
 
     /* Scene 5 — Be Kind / Be Mean */
+    /* Morning 3 "be kind" line-by-line clips (s1, s2, s3 ...) */
+    "s1": "audio/scene5-kind/s1.mp4",
+    "s2": "audio/scene5-kind/s2.mp4",
+    "s3": "audio/scene5-kind/s3.mp4",
+    "s4": "audio/scene5-kind/s4.mp4",
+    "s5": "audio/scene5-kind/s5.mp4",
+    "s6": "audio/scene5-kind/s6.mp4",
+    "s7": "audio/scene5-kind/s7.mp4",
+    "s8": "audio/scene5-kind/s8.mp4",
+    "s9": "audio/scene5-kind/s9.mp4",
+    "s10": "audio/scene5-kind/s10.mp4",
+    "s11": "audio/scene5-kind/s11.mp4",
+    "s12": "audio/scene5-kind/s12.mp4",
+    "s13": "audio/scene5-kind/s13.mp4",
+    "s14": "audio/scene5-kind/s14.mp4",
+    "s15": "audio/scene5-kind/s15.mp4",
     "5K-1": "audio/scene5-kind/5-1k.mp4",
     "5K-2": "audio/scene5-kind/5-2k.mp4",
     "5M-1": "audio/scene5-mean/5-1m.mp4",
@@ -1871,41 +2057,130 @@ const audio = {
 
 const loadedAudio = {};
 
+/* Sound-effect files have long names with spaces, so a small
+   difference (capital letters, .mp3 vs .mp4, underscores) would fail
+   silently. If the exact path fails, try the likely variants and log
+   which one worked. */
+function audioPathCandidates(path) {
+    if (!path.startsWith("audio/sfx/")) return [path];
+
+    const slash = path.lastIndexOf("/");
+    const dir = path.slice(0, slash + 1);
+    const file = path.slice(slash + 1);
+    const dot = file.lastIndexOf(".");
+    const name = dot >= 0 ? file.slice(0, dot) : file;
+    const ext = dot >= 0 ? file.slice(dot + 1) : "mp4";
+
+    const names = [
+        name,
+        name.toLowerCase(),
+        name.replace(/ /g, "_"),
+        name.replace(/ /g, "-"),
+        name.replace(/ /g, ""),
+        name.toLowerCase().replace(/ /g, "_"),
+        name.toLowerCase().replace(/ /g, "-")
+    ];
+    const exts = [ext, "mp3", "m4a", "wav", "ogg", "mp4"];
+
+    const out = [path];
+    names.forEach(n => exts.forEach(e => {
+        const candidate = `${dir}${n}.${e}`;
+        if (!out.includes(candidate)) out.push(candidate);
+    }));
+    return out;
+}
+
 function getAudioAsset(key) {
-    const path = AUDIO_FILES[key];
+    let path = AUDIO_FILES[key];
+
+    /* Fallback: "sN" keys resolve to audio/scene5-kind/sN.mp4 */
+    if (!path && /^s\d+$/.test(key)) {
+        path = `audio/scene5-kind/${key}.mp4`;
+    }
+
     if (!path) return null;
 
     if (!loadedAudio[key]) {
+        const candidates = audioPathCandidates(path);
+        let index = 0;
+
         const track = new Audio();
         track.preload = "auto";
-        track.src = path;
+        track.src = candidates[0];
+
         track.addEventListener("error", () => {
-            /* Missing assets are intentionally ignored. */
-        }, { once: true });
+            index++;
+            if (index < candidates.length) {
+                track.src = candidates[index];
+                track.load();
+            } else {
+                /* Non-fatal, but visible in the console (F12). */
+                console.warn("[audio] could not load \"" + key + "\". Tried: " + path
+                    + (candidates.length > 1 ? " (and " + (candidates.length - 1) + " name/extension variants)" : ""));
+            }
+        });
+
+        track.addEventListener("loadeddata", () => {
+            if (index > 0) {
+                console.info("[audio] \"" + key + "\" loaded from " + candidates[index]
+                    + " — rename your file to match: " + path);
+            }
+        });
+
+        track.load();
         loadedAudio[key] = track;
     }
 
     return loadedAudio[key];
 }
 
+/* Start fetching clips early so they don't lag when their line appears. */
+function preloadAudioKeys(keys) {
+    (keys || []).forEach(k => { if (k) getAudioAsset(k); });
+}
+
+function preloadSfx() {
+    preloadAudioKeys([
+        "clockTicking", "knocking", "doorknob", "footsteps",
+        "heartbeat1", "heartbeat2", "heartbeat3", "heartbeat4",
+        "jumpscare", "ringingEar", "walkingTowardsHouse"
+    ]);
+}
+
 function playAudioAsset(key, { loop = false, volume = 1 } = {}) {
     const track = getAudioAsset(key);
     if (!track) return;
 
-    try {
-        track.loop = loop;
-        track.volume = volume;
-        track.currentTime = 0;
-        const promise = track.play();
-        if (promise && typeof promise.catch === "function") {
-            promise.catch(() => {});
-        }
-    } catch (error) {}
+    const token = (track._playToken = (track._playToken || 0) + 1);
+
+    const start = () => {
+        if (track._playToken !== token) return;   /* stopped meanwhile */
+        try {
+            track.loop = loop;
+            track.volume = volume;
+            track.currentTime = 0;
+            const promise = track.play();
+            if (promise && typeof promise.catch === "function") {
+                promise.catch(err => console.warn("[audio] play blocked/failed for \"" + key + "\":", err && err.name));
+            }
+        } catch (error) {}
+    };
+
+    /* If the file hasn't buffered yet, play the moment it can,
+       instead of failing silently. */
+    if (track.readyState >= 2) {
+        start();
+    } else {
+        track.addEventListener("canplay", start, { once: true });
+        try { track.load(); } catch (e) {}
+    }
 }
 
 function stopAudioAsset(key) {
     const track = loadedAudio[key];
     if (!track) return;
+
+    track._playToken = (track._playToken || 0) + 1;  /* cancel pending play */
 
     try {
         track.pause();
@@ -1952,14 +2227,21 @@ function stopAudio(key) {
    The game already knows how to use them.
    ================================================================ */
 
-const FRAME_IMAGES = {};
+/* Frame cache: stores which extension worked for each frame */
+const frameCache = {};
 
-for (let frameNumber = 1; frameNumber <= 52; frameNumber++) {
-    FRAME_IMAGES[frameNumber] =
-        `frames/frame${String(frameNumber).padStart(2, "0")}.jpg`;
+/* Try .jpg and .png for each frame number */
+function getFramePath(frameNumber) {
+    if (frameCache[frameNumber]) {
+        return frameCache[frameNumber];
+    }
+
+    const base = `frames/frame${String(frameNumber).padStart(2, "0")}`;
+    const candidates = [`${base}.jpg`, `${base}.png`];
+
+    /* Return first candidate; showFrame will check and log which worked */
+    return candidates;
 }
-
-
 
 /* ================================================================
    FRAME DISPLAY
@@ -1970,27 +2252,45 @@ function showFrame(
     label = ""
 ) {
 
-    const image = FRAME_IMAGES[frameNumber];
+    resetZoom();
+
+    const candidates = getFramePath(frameNumber);
 
     placeholderLabel.innerHTML =
         `FRAME ${String(frameNumber).padStart(2, "0")}<br>
          <small>${label || "Placeholder artwork"}</small>`;
 
-    /* Keep the previous/current frame visible underneath the black
-       overlay. If the new image is missing, the normal placeholder
-       remains available instead of breaking the scene. */
-    if (image) {
-        sceneImage.onload = () => {
-            sceneImage.style.opacity = "1";
-            placeholderScene.style.opacity = "0";
+    /* Try each candidate extension until one loads */
+    if (candidates && candidates.length > 0) {
+        let attemptIndex = 0;
+
+        const tryNext = () => {
+            if (attemptIndex >= candidates.length) {
+                /* None of the candidates loaded */
+                sceneImage.style.opacity = "0";
+                placeholderScene.style.opacity = "1";
+                return;
+            }
+
+            const src = candidates[attemptIndex];
+
+            sceneImage.onload = () => {
+                /* Success! Cache this extension for next time */
+                frameCache[frameNumber] = src;
+                sceneImage.style.opacity = "1";
+                placeholderScene.style.opacity = "0";
+            };
+
+            sceneImage.onerror = () => {
+                /* This extension didn't work, try the next */
+                attemptIndex++;
+                tryNext();
+            };
+
+            sceneImage.src = src;
         };
 
-        sceneImage.onerror = () => {
-            sceneImage.style.opacity = "0";
-            placeholderScene.style.opacity = "1";
-        };
-
-        sceneImage.src = image;
+        tryNext();
     } else {
         sceneImage.style.opacity = "0";
         placeholderScene.style.opacity = "1";
@@ -2006,6 +2306,94 @@ function showFrame(
     sceneTransition.classList.add("blink");
 }
 
+
+
+/* ================================================================
+   SLOW FADE TO / FROM BLACK
+   ================================================================ */
+
+function fadeToBlack(duration = 2200) {
+
+    return new Promise(resolve => {
+
+        fadeBlack.classList.add("active");      /* also blocks clicks */
+
+        fadeBlack.style.transition = "none";
+        fadeBlack.style.opacity = "0";
+        void fadeBlack.offsetWidth;
+
+        fadeBlack.style.transition = `opacity ${duration}ms ease-in-out`;
+        fadeBlack.style.opacity = "1";
+
+        setTimeout(resolve, duration + 100);
+
+    });
+
+}
+
+function fadeFromBlack(duration = 1600) {
+
+    return new Promise(resolve => {
+
+        fadeBlack.style.transition = `opacity ${duration}ms ease-in-out`;
+        fadeBlack.style.opacity = "0";
+
+        setTimeout(() => {
+
+            fadeBlack.classList.remove("active");
+
+            resolve();
+
+        }, duration + 100);
+
+    });
+
+}
+
+function clearFade() {
+
+    fadeBlack.style.transition = "none";
+    fadeBlack.style.opacity = "0";
+    fadeBlack.classList.remove("active");
+
+}
+
+
+/* ================================================================
+   SLOW ZOOM ON THE CURRENT FRAME
+   ================================================================ */
+
+function zoomFrame(scale = 1.3, duration = 6000) {
+
+    [sceneImage, placeholderScene].forEach(el => {
+
+        el.style.transition =
+            `transform ${duration}ms ease-in-out, opacity 700ms ease, filter 700ms ease`;
+
+        el.style.transform = `scale(${scale})`;
+
+    });
+
+}
+
+function resetZoom() {
+
+    [sceneImage, placeholderScene].forEach(el => {
+
+        el.style.transition = "none";
+
+        el.style.transform = "none";
+
+    });
+
+    void sceneImage.offsetWidth;
+
+    /* Restore the stylesheet transitions afterwards. */
+    [sceneImage, placeholderScene].forEach(el => {
+        el.style.transition = "";
+    });
+
+}
 
 
 /* ================================================================
@@ -2134,6 +2522,19 @@ function typeText(
 
         speaker.classList
             .add("old-man");
+
+    }
+
+    else if (type === "police") {
+
+        speaker.textContent =
+            "POLICE";
+
+        speaker.classList
+            .add("police");
+
+        dialogueText.classList
+            .add("police");
 
     }
 
@@ -2280,13 +2681,46 @@ function typeText(
    DIALOGUE HELPER
    ================================================================ */
 
+let dialogueAudioQueue = [];
+let currentDialogueAudioKey = null;
+
+function setDialogueAudioQueue(keys) {
+    stopCurrentDialogueAudio();
+    dialogueAudioQueue = Array.isArray(keys) ? [...keys] : [];
+    preloadAudioKeys(dialogueAudioQueue);   /* prevents delayed dialogue audio */
+}
+
+function stopCurrentDialogueAudio() {
+    if (currentDialogueAudioKey) {
+        stopAudioAsset(currentDialogueAudioKey);
+        currentDialogueAudioKey = null;
+    }
+}
+
+function playNextDialogueAudio() {
+    stopCurrentDialogueAudio();
+    const key = dialogueAudioQueue.shift();
+    if (!key) return;                       /* null = intentionally silent slot */
+    currentDialogueAudioKey = key;
+    playAudioAsset(key, { volume: 1 });
+}
+
+/* options.silent = true -> this line has NO voice clip and must not
+   use up the next clip in the queue (e.g. "Midnight.", "KNOCK. KNOCK."). */
 function say(
     text,
     type = "narrator",
-    callback = null
+    callback = null,
+    options = {}
 ) {
 
     clearChoices();
+
+    if (options && options.silent) {
+        stopCurrentDialogueAudio();
+    } else if (String(text || "").trim()) {
+        playNextDialogueAudio();
+    }
 
     typeText(
         text,
@@ -2682,6 +3116,9 @@ dialogueBox.addEventListener(
             currentAction =
                 null;
 
+            // The current dialogue clip must stop the instant Next is pressed.
+            stopCurrentDialogueAudio();
+
             action();
 
         }
@@ -2740,6 +3177,9 @@ startButton.addEventListener(
         state.started =
             true;
 
+        /* Warm up sound effects on the user's click (unlocks audio too). */
+        preloadSfx();
+
         /* Start background music only after the user's click. */
         playAudioAsset(
             "BGM",
@@ -2759,6 +3199,8 @@ startButton.addEventListener(
    ================================================================ */
 
 async function beginIntro() {
+
+    setDialogueAudioQueue(["1-1", "1-2", "1-3", "1-4"]);
 
     setChapter(
         "INTRODUCTION"
@@ -2875,57 +3317,71 @@ async function sceneOldManArrival() {
         "THE HOUSE"
     );
 
+    setDialogueAudioQueue([
+        "2-1", "2-2", "2-3", "2-4"
+    ]);
+
     showFrame(
         8,
-        "The front door opens."
+        "The front door opens. Brief darkness."
     );
 
-    await wait(
-        500
-    );
-
-    await doJumpscare(
-        "👁"
-    );
-
-    showFrame(
-        9,
-        "The old man's face appears."
-    );
-
+    // IMPORTANT: Frame 8 is only the door opening. The jumpscare must NOT
+    // happen automatically. The player must press Next to reach Frame 9.
     say(
-        "Good evening. You startled me.",
-        "old-man"
+        "",
+        "system"
     );
 
     continueAction(
-        () => {
+        async () => {
+
+            showFrame(
+                9,
+                "The old man's face suddenly appears."
+            );
+
+            // Jumpscare is now triggered only when Frame 9 is reached.
+            await doJumpscare(
+                "👁"
+            );
 
             say(
-                "Forgive me. I did not mean to.",
-                "narrator"
+                "Good evening. You startled me.",
+                "old-man"
             );
 
             continueAction(
                 () => {
 
                     say(
-                        "Come in, then.",
-                        "old-man"
+                        "Forgive me. I did not mean to.",
+                        "narrator"
                     );
 
                     continueAction(
                         () => {
 
                             say(
-                                "Thank you.",
-                                "narrator"
+                                "Come in, then.",
+                                "old-man"
                             );
 
                             continueAction(
                                 () => {
 
-                                    morningOne();
+                                    say(
+                                        "Thank you.",
+                                        "narrator"
+                                    );
+
+                                    continueAction(
+                                        () => {
+
+                                            morningOne();
+
+                                        }
+                                    );
 
                                 }
                             );
@@ -2947,6 +3403,8 @@ async function sceneOldManArrival() {
    ================================================================ */
 
 function morningOne() {
+
+    setDialogueAudioQueue(["3-1", "3-2", "3-3", "3-4", "3-5", "3-6", "3-7", "3-8", "3-9", "3-10", "3-11", "3-12", "3-13", "3-14", "3-15", "3-16", "3-17", "3-18", "3-19"]);
 
     setChapter(
         "MORNING 1"
@@ -3169,6 +3627,8 @@ function morningOne() {
 
 function nightOne() {
 
+    setDialogueAudioQueue(["4-1", "4-2"]);
+
     setChapter(
         "NIGHT 1 — MIDNIGHT"
     );
@@ -3191,7 +3651,9 @@ function nightOne() {
 
     say(
         "Midnight.",
-        "system"
+        "system",
+        null,
+        { silent: true }
     );
 
     continueAction(
@@ -3256,6 +3718,8 @@ function nightOne() {
    ================================================================ */
 
 function nightOneStalk() {
+
+    setDialogueAudioQueue(["4S-1", "4S-2", "4S-3", "4S-4"]);
 
     setChapter(
         "NIGHT 1 — THE OLD MAN'S ROOM"
@@ -3330,6 +3794,8 @@ function nightOneStalk() {
    ================================================================ */
 
 function morningTwo() {
+
+    setDialogueAudioQueue(["5-1", "5-2", "5-3", "5-4", "5-5", "5-6", "5-7", "5-8", "5-9", "5-10", "5-11", "5-12", "5-13", "5-14", "5-15"]);
 
     setChapter(
         "MORNING 2"
@@ -3528,6 +3994,8 @@ function morningChoice(
 
                         state.kindness++;
 
+                        setDialogueAudioQueue(["5K-1", "5K-2"]);
+
                         say(
                             "Thank you for being here.",
                             "old-man"
@@ -3616,6 +4084,9 @@ function morningChoice(
    ================================================================ */
 
 function nightThree() {
+
+    /* null = "And still that eye follows me." has no voice clip */
+    setDialogueAudioQueue(["6-1", "6-2", null, "6-3", "6-4"]);
 
     setChapter(
         "NIGHT 3"
@@ -3803,6 +4274,8 @@ function nightChoice(
 
 function stalkNightThree() {
 
+    setDialogueAudioQueue(["6S-1", "6S-2"]);
+
     setChapter(
         "NIGHT 3 — STALK"
     );
@@ -3868,6 +4341,12 @@ function morningThree() {
    ================================================================ */
 
 function morningThreeKind() {
+
+    setDialogueAudioQueue([
+        "s1", "s2", "s3", "s4", "s5",
+        "s6", "s7", "s8", "s9", "s10",
+        "s11", "s12", "s13", "s14", "s15"
+    ]);
 
     say(
         "There you are.",
@@ -4041,6 +4520,8 @@ function morningThreeKind() {
 
 function morningThreeMean() {
 
+    setDialogueAudioQueue(["5M-1", "5M-2"]);
+
     showFrame(
         10,
         "The old man looks sad."
@@ -4130,6 +4611,8 @@ function morningThreeMean() {
 
 function nightFive() {
 
+    setDialogueAudioQueue(["7-1", "7-2", "7-3"]);
+
     setChapter(
         "NIGHT 5"
     );
@@ -4204,23 +4687,25 @@ function stalkNightFive() {
         "The old man's door creaks open in the dark."
     );
 
-    playAudio(
-        "nightFiveStalk"
-    );
+    /* Nothing plays here (the old "never kinder" clip was Night 1's). */
+    stopCurrentDialogueAudio();
 
     say(
         "",
-        "system"
+        "system",
+        null,
+        { silent: true }
     );
 
     continueAction(
         async () => {
 
-            stopAudio(
-                "nightFiveStalk"
-            );
+            /* Slowly fade to black, then the next scene + its audio start. */
+            await fadeToBlack(2400);
 
             finalNight();
+
+            await fadeFromBlack(1600);
 
         }
     );
@@ -4235,6 +4720,8 @@ function stalkNightFive() {
 async function badNightAttack(
     nightNumber
 ) {
+
+    setDialogueAudioQueue(["6A-1", "6A-2"]);
 
     setChapter(
         `NIGHT ${nightNumber} — ATTACK`
@@ -4326,6 +4813,8 @@ async function badNightAttack(
    ================================================================ */
 
 function finalNight() {
+
+    setDialogueAudioQueue(["8-1", "8-2", "8-3", "8-4", "8-5", "8-6"]);
 
     setChapter(
         "NIGHT 8 — THE FINAL NIGHT"
@@ -4484,6 +4973,8 @@ function finalChoice() {
 
 async function finalAttack() {
 
+    setDialogueAudioQueue(["8A-1", "8A-2"]);
+
     state.finalChoice =
         "attack";
 
@@ -4566,6 +5057,8 @@ async function finalAttack() {
 
 function finalCanon() {
 
+    setDialogueAudioQueue(["8C-1", "8C-2", "8C-3", "8C-4"]);
+
     state.finalChoice =
         "canon";
 
@@ -4631,6 +5124,8 @@ function finalCanon() {
    ================================================================ */
 
 function bodyScene() {
+
+    setDialogueAudioQueue(["9-1", "9-2"]);
 
     setChapter(
         "THE BODY"
@@ -4711,6 +5206,8 @@ function bodyScene() {
 
 function badBodyEnding() {
 
+    setDialogueAudioQueue([state.bodyLocation === "attic" ? "9A-1" : "9B-1"]);
+
     setChapter(
         "HIDING THE BODY"
     );
@@ -4756,6 +5253,8 @@ function badBodyEnding() {
    ================================================================ */
 
 function canonBodyEnding() {
+
+    setDialogueAudioQueue(["9F-1", "9F-2", "9F-3"]);
 
     setChapter(
         "HIDING THE BODY — CANON"
@@ -4803,6 +5302,8 @@ function canonBodyEnding() {
 
 function policeScene() {
 
+    setDialogueAudioQueue(["10-1", "10-2", "10-3", "10-4", "10-5", "10-6"]);
+
     setChapter(
         "THE POLICE"
     );
@@ -4822,7 +5323,14 @@ function policeScene() {
 
             say(
                 "KNOCK. KNOCK. KNOCK.",
-                "system"
+                "system",
+                null,
+                { silent: true }
+            );
+
+            playAudioAsset(
+                "knocking",
+                { volume: 1 }
             );
 
             continueAction(
@@ -4834,7 +5342,7 @@ function policeScene() {
 
                             say(
                                 "We received a report concerning a disturbance during the night.",
-                                "narrator"
+                                "police"
                             );
 
                             continueAction(
@@ -4850,7 +5358,7 @@ function policeScene() {
 
                                             say(
                                                 "A neighbor heard a shriek.",
-                                                "narrator"
+                                                "police"
                                             );
 
                                             continueAction(
@@ -4892,6 +5400,8 @@ function policeScene() {
 
 function policeSearch() {
 
+    setDialogueAudioQueue(["11-1", "11-2", "11-3", "11-4", "11-5"]);
+
     setChapter(
         "THE SEARCH"
     );
@@ -4912,9 +5422,19 @@ function policeSearch() {
                         "I took my visitors all over the house.",
                         () => {
 
+                            showFrame(
+                                52,
+                                "The old man's chamber."
+                            );
+
                             poe(
                                 "I led them, at length, to his chamber.",
                                 () => {
+
+                                    showFrame(
+                                        51,
+                                        "The narrator sits over the victim's body."
+                                    );
 
                                     poe(
                                         "I placed my own seat upon the very spot beneath which reposed the corpse of the victim.",
@@ -4945,6 +5465,8 @@ function policeSearch() {
    ================================================================ */
 
 async function policeHeartbeat() {
+
+    setDialogueAudioQueue(["12-1", "12-2", "12-3", "12-4", "12-5"]);
 
     setChapter(
         "THE HEART"
@@ -4978,6 +5500,11 @@ async function policeHeartbeat() {
                     poe(
                         "But it continued and gained definiteness.",
                         async () => {
+
+                            showFrame(
+                                57,
+                                "The narrator, wild-eyed, in front of the police."
+                            );
 
                             say(
                                 "So, gentlemen, what brings you here tonight?",
@@ -5029,9 +5556,19 @@ async function policeHeartbeat() {
 
 async function policeBreakdown() {
 
+    setDialogueAudioQueue(["13-1", "13-2", "13-3", "13-4", "13-5"]);
+
     setChapter(
         "CONFESSION"
     );
+
+    showFrame(
+        57,
+        "The confession."
+    );
+
+    /* Slow zoom-in on frame 57 while the sound grows. */
+    zoomFrame(1.35, 7000);
 
     poe(
         "It grew louder—louder—louder!",
@@ -5103,6 +5640,9 @@ async function policeBreakdown() {
 
 function finalConfession() {
 
+    // The final Scene 13 clip (13-6) now plays on Edgar's confession line.
+    setDialogueAudioQueue(["13-6"]);
+
     setChapter(
         "THE CONFESSION"
     );
@@ -5111,45 +5651,54 @@ function finalConfession() {
         2
     );
 
-    say(
-        "Villains! dissemble no more!",
-        "narrator"
-    );
-
-    continueAction(
+    poe(
+        "Villains! dissemble no more! I admit the deed!—tear up the planks! here, here!—it is the beating of his hideous heart!",
         () => {
 
+            heartbeatFlash
+                .classList
+                .remove("beat");
+
+            /* Closing scenes: frame 52 -> next -> frame 53 -> slow fade -> ending */
+            showFrame(
+                52,
+                "The old man's room."
+            );
+
             say(
-                "I admit the deed!",
-                "narrator"
+                "",
+                "system",
+                null,
+                { silent: true }
             );
 
             continueAction(
                 () => {
 
+                    showFrame(
+                        53,
+                        "The end of it all."
+                    );
+
                     say(
-                        "Tear up the planks! Here, here!",
-                        "narrator"
+                        "",
+                        "system",
+                        null,
+                        { silent: true }
                     );
 
                     continueAction(
-                        () => {
+                        async () => {
 
-                            poe(
-                                "Villains! dissemble no more! I admit the deed!—tear up the planks! here, here!—it is the beating of his hideous heart!",
-                                () => {
+                            await fadeToBlack(3000);
 
-                                    heartbeatFlash
-                                        .classList
-                                        .remove("beat");
-
-                                    ending(
-                                        "CANON ENDING",
-                                        "The narrator's guilt finally overwhelms him, and he confesses to the police."
-                                    );
-
-                                }
+                            ending(
+                                "CANON ENDING",
+                                "The narrator's guilt finally overwhelms him, and he confesses to the police."
                             );
+
+                            /* Ending screen fades in over the black; then drop the overlay. */
+                            setTimeout(clearFade, 1200);
 
                         }
                     );
@@ -5168,6 +5717,8 @@ function finalConfession() {
    ================================================================ */
 
 function goodEnding() {
+
+    setDialogueAudioQueue(["4L-1", "4L-2", "4L-3", "4L-4"]);
 
     state.leftAtNight1 =
         true;
@@ -5279,6 +5830,11 @@ function ending(
     endingDescription.textContent =
         description;
 
+    /* Restart the movie-style credits from the bottom. */
+    creditsRoll.classList.remove("rolling");
+    void creditsRoll.offsetWidth;
+    creditsRoll.classList.add("rolling");
+
     endingScreen
         .classList
         .add("visible");
@@ -5305,6 +5861,10 @@ restartButton.addEventListener(
         endingScreen
             .classList
             .remove("visible");
+
+        creditsRoll.classList.remove("rolling");
+
+        clearFade();
 
         dialogueWrapper
             .classList
