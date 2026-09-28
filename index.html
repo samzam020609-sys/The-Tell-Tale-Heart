@@ -3408,7 +3408,7 @@ function morningOne() {
     );
 
     showFrame(
-        10,
+        18,
         "The old man sits at the table."
     );
 
@@ -3732,7 +3732,7 @@ function nightOneStalk() {
         () => {
 
             showFrame(
-                16,
+                13,
                 "The narrator holds the doorknob."
             );
 
@@ -3741,7 +3741,7 @@ function nightOneStalk() {
                 () => {
 
                     showFrame(
-                        17,
+                        16,
                         "The door opens into darkness."
                     );
 
@@ -3754,7 +3754,7 @@ function nightOneStalk() {
                         () => {
 
                             showFrame(
-                                18,
+                                61,
                                 "The old man sleeping."
                             );
 
@@ -4093,7 +4093,7 @@ function nightThree() {
         3;
 
     showFrame(
-        20,
+        12,
         "The hallway is darker now."
     );
 
@@ -4102,7 +4102,7 @@ function nightThree() {
         () => {
 
             showFrame(
-                21,
+                12,
                 "Walking through the hallway."
             );
 
@@ -4120,7 +4120,7 @@ function nightThree() {
                         () => {
 
                             showFrame(
-                                23,
+                                14,
                                 "The old man's door."
                             );
 
@@ -4278,7 +4278,7 @@ function stalkNightThree() {
     );
 
     showFrame(
-        30,
+        39,
         "The narrator approaches with the lantern."
     );
 
@@ -4312,7 +4312,7 @@ function morningThree() {
     );
 
     showFrame(
-        10,
+        9,
         "Morning. The old man smiles."
     );
 
@@ -4627,7 +4627,7 @@ function nightFive() {
         () => {
 
             showFrame(
-                32,
+                21,
                 "The narrator moves closer."
             );
 
@@ -4636,7 +4636,7 @@ function nightFive() {
                 () => {
 
                     showFrame(
-                        33,
+                        22,
                         "The old man's door."
                     );
 
@@ -4680,7 +4680,7 @@ function stalkNightFive() {
     );
 
     showFrame(
-        52,
+        15,
         "The old man's door creaks open in the dark."
     );
 
@@ -4822,7 +4822,7 @@ function finalNight() {
     );
 
     showFrame(
-        34,
+        28,
         "The hallway has become red."
     );
 
@@ -4838,7 +4838,7 @@ function finalNight() {
                 () => {
 
                     showFrame(
-                        35,
+                        29,
                         "Closer to the old man's door."
                     );
 
@@ -4850,7 +4850,7 @@ function finalNight() {
                         () => {
 
                             showFrame(
-                                36,
+                                31,
                                 "Almost at the door."
                             );
 
@@ -4862,7 +4862,7 @@ function finalNight() {
                                 () => {
 
                                     showFrame(
-                                        37,
+                                        17,
                                         "The door opens. The old man is waiting."
                                     );
 
@@ -5061,7 +5061,7 @@ function finalCanon() {
     );
 
     showFrame(
-        43,
+        39,
         "The lantern opens."
     );
 
@@ -5070,7 +5070,7 @@ function finalCanon() {
         () => {
 
             showFrame(
-                44,
+                40,
                 "The narrator rushes forward."
             );
 
@@ -5079,7 +5079,7 @@ function finalCanon() {
                 () => {
 
                     showFrame(
-                        45,
+                        41,
                         "The struggle."
                     );
 
@@ -5088,7 +5088,7 @@ function finalCanon() {
                         () => {
 
                             showFrame(
-                                46,
+                                42,
                                 "Silence."
                             );
 
@@ -5126,14 +5126,17 @@ function bodyScene() {
     );
 
     showFrame(
-        47,
+        62,
         "The narrator looks down."
     );
 
     poe(
         "I placed my hand upon the heart and held it there many minutes.",
         () => {
-
+showFrame(
+        47,
+        "Eye"
+    );
             poe(
                 "He was stone dead. His eye would trouble me no more.",
                 () => {
@@ -5210,7 +5213,10 @@ function badBodyEnding() {
         state.bodyLocation ===
         "attic"
     ) {
-
+showFrame(
+        51,
+        "Attic"
+    );
         thought(
             "The attic. No one will look there.",
             () => {
@@ -5225,7 +5231,10 @@ function badBodyEnding() {
     }
 
     else {
-
+showFrame(
+        50,
+        "Bathroom"
+    );
         thought(
             "The bathroom. They will never find it there.",
             () => {
@@ -5255,7 +5264,7 @@ function canonBodyEnding() {
     );
 
     showFrame(
-        48,
+        53,
         "The floorboards are opened."
     );
 
@@ -5264,7 +5273,7 @@ function canonBodyEnding() {
         () => {
 
             showFrame(
-                49,
+                52,
                 "The floorboards are replaced."
             );
 
@@ -5307,7 +5316,7 @@ function policeScene() {
     );
 
     showFrame(
-        50,
+        6,
         "The front door."
     );
 
@@ -5333,7 +5342,10 @@ function policeScene() {
                     poe(
                         "I went down to open it with a light heart,—for what had I now to fear?",
                         () => {
-
+ showFrame(
+        56,
+        "Cop Arrives"
+    );
                             say(
                                 "We received a report concerning a disturbance during the night.",
                                 "police"
@@ -5399,7 +5411,10 @@ function policeSearch() {
     setChapter(
         "THE SEARCH"
     );
-
+showFrame(
+        57,
+        "Cop Arrives"
+    );
     poe(
         "I bade the gentlemen welcome.",
         () => {
@@ -5426,7 +5441,7 @@ function policeSearch() {
                                 () => {
 
                                     showFrame(
-                                        51,
+                                        54,
                                         "The narrator sits over the victim's body."
                                     );
 
@@ -5467,7 +5482,7 @@ async function policeHeartbeat() {
     );
 
     showFrame(
-        51,
+        54,
         "The narrator sits over the hidden body."
     );
 
